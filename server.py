@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-�芥�憭扳� 擃�敶�詨��� - ���胯�喋��萸�
-IR BANK ���芸���踴��芸�����嫘�Ｙ��箝��整�
+リベ大流 高配当株選別ツール - バックエンドサーバー
+IR BANK から株式データを自動取得してスコア算出します
 
-雿踴���:
+使い方:
   1. pip install flask flask-cors requests beautifulsoup4
   2. python server.py
-  3. ��艾�� http://localhost:5000 ����
+  3. ブラウザで http://localhost:5000 を開く
 """
 
 import re
@@ -17,7 +17,7 @@ import webbrowser
 import threading
 
 # --------------------------------------------------
-# 靘����晞�詻�芸��扎�嫘��潦
+# 依存パッケージの自動インストール
 # --------------------------------------------------
 def install_if_missing(packages):
     import importlib
@@ -25,7 +25,7 @@ def install_if_missing(packages):
         try:
             importlib.import_module(import_name)
         except ImportError:
-            print(f"� {pkg} ��喋��思葉...")
+            print(f"📦 {pkg} をインストール中...")
             os.system(f'"{sys.executable}" -m pip install {pkg} -q')
 
 install_if_missing([
@@ -46,28 +46,28 @@ CORS(app)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # ==================================================
-#  �扎��潦��  ��� �� float
+#  値パーサー  兆・億 → float
 # ==================================================
 def parse_value(text):
     if not text:
         return None
-    text = re.sub(r'[,\s��*]', '', str(text)).strip()
-    if text in ['-', '', '鈭�', '��', '嚗�', '--']:
+    text = re.sub(r'[,\s※*]', '', str(text)).strip()
+    if text in ['-', '', '予', '—', '－', '--']:
         return None
 
-    m = re.search(r'^(-?[\d.]+)��$', text)
+    m = re.search(r'^(-?[\d.]+)兆$', text)
     if m:
         return float(m.group(1)) * 1e12
 
-    m = re.search(r'^(-?[\d.]+)��$', text)
+    m = re.search(r'^(-?[\d.]+)億$', text)
     if m:
         return float(m.group(1)) * 1e8
 
-    m = re.search(r'^(-?[\d.]+)��$', text)
+    m = re.search(r'^(-?[\d.]+)円$', text)
     if m:
         return float(m.group(1))
 
-    m = re.search(r'^(-?\\d.]+)%$', text)
+    m = re.search(r'^(-?[\d.]+)%$', text)
     if m:
         return float(m.group(1))
 
@@ -79,7 +79,7 @@ def parse_value(text):
 
 
 # ==================================================
-#  ��喋�閮�
+#  トレンド計算
 # ==================================================
 def calc_trend(pairs, window=8):
     """
@@ -106,7 +106,7 @@ def calc_trend(pairs, window=8):
 
 def cf_status(pairs):
     """
-    �嗆平CF撠: 韏文��� + ��喋�
+    営業CF専用: 赤字チェック + トレンド
     returns: 'up_positive' / 'positive' / 'has_negative' / 'unknown'
     """
     valid = [(y, v) for y, v in pairs if v is not None]
@@ -122,7 +122,7 @@ def cf_status(pairs):
 
 def dividend_status(pairs):
     """
-    ������: 皜��� + ��喋�
+    配当金専用: 減配チェック + トレンド
     returns: 'stable_growing' / 'stable' / 'has_cut' / 'unknown'
     """
     valid = [(y, v) for y, v in pairs if v is not None and v > 0]
@@ -130,20 +130,20 @@ def dividend_status(pairs):
         return 'unknown'
     recent10 = valid[-10:]
     for i in range(1, len(recent10)):
-        if recent10[i][1] < recent10[i - 1][1] * 0.95:   # 5%頞皜�
+        if recent10[i][1] < recent10[i - 1][1] * 0.95:   # 5%超の減少
             return 'has_cut'
     trend = calc_trend(pairs)
     return 'stable_growing' if trend == 'up' else 'stable'
 
 
 # ==================================================
-#  �������潦���
+#  テーブルから列データを抽出
 # ==================================================
 def extract_column(table, col_keyword):
     """
     table: BeautifulSoup table element
-    col_keyword: ����潦�怒���准�胯��
-    returns: [(year_str, float_or_None), ...]  鈭葫銵�文�
+    col_keyword: ヘッダーに含まれるキーワード
+    returns: [(year_str, float_or_None), ...]  予測行は除外
     """
     thead = table.find('thead')
     if not thead:
@@ -168,8 +168,8 @@ def extract_column(table, col_keyword):
         if len(cells) <= col_idx:
             continue
         year = cells[0].get_text(strip=True)
-        # 鈭葫銵瘜券�銵��文�
-        if '鈭�' in year or '��' in year or not re.search(r'\d{4}', year):
+        # 予測行・注釈行を除外
+        if '予' in year or '※' in year or not re.search(r'\d{4}', year):
             continue
         val = parse_value(cells[col_idx].get_text(strip=True))
         rows.append((year, val))
@@ -177,7 +177,7 @@ def extract_column(table, col_keyword):
 
 
 def last_valid(pairs):
-    """�渲��格��孵扎�餈�"""
+    """直近の有効値を返す"""
     for _, v in reversed(pairs):
         if v is not None:
             return v
@@ -185,7 +185,7 @@ def last_valid(pairs):
 
 
 # ==================================================
-#  IR BANK �嫘�研��唳雿�
+#  IR BANK スクレイピング本体
 # ==================================================
 def scrape_irbank(code):
     code = re.sub(r'\s', '', str(code))
@@ -208,7 +208,7 @@ def scrape_irbank(code):
 
     soup = BeautifulSoup(resp.text, 'html.parser')
 
-    # ---- ���� ----
+    # ---- 銘柄名 ----
     company_name = ''
     h1 = soup.find('h1')
     if h1:
@@ -216,68 +216,68 @@ def scrape_irbank(code):
         m = re.match(r'^\d+\s+(.+)$', raw)
         company_name = m.group(1) if m else raw
 
-    # ---- �� ----
+    # ---- テーブル ----
     tables = soup.find_all('table')
     if len(tables) < 4:
         raise ValueError(
-            f"���� {len(tables)} �����扎������"
-            "閮澆�喋��蝣箄��������"
+            f"テーブルが {len(tables)} 個しか見つかりません。"
+            "証券コードを確認してください。"
         )
 
     t0, t1, t2, t3 = tables[0], tables[1], tables[2], tables[3]
 
-    # ---- ���拙����萸��芥�� dt/dd 瑽���敺�----
-    # IR BANK�桃����潦�怒 <dt>�� 鈭�</dt><dd>3.1%</dd> �具��耦�批����頛���
+    # ---- 配当利回り（サマリーの dt/dd 構造から取得）----
+    # IR BANKの結果ページには <dt>配当 予</dt><dd>3.1%</dd> という形で利回りが記載される
     dividend_yield = None
     for dt in soup.find_all('dt'):
         dt_text = dt.get_text(strip=True)
-        if ('��' in dt_text
-                and '���批�' not in dt_text
-                and '����' not in dt_text
-                and '����' not in dt_text):
+        if ('配当' in dt_text
+                and '配当性向' not in dt_text
+                and '配当金' not in dt_text
+                and '配当率' not in dt_text):
             dd = dt.find_next_sibling('dd')
             if dd:
                 m = re.search(r'([\d.]+)%', dd.get_text(strip=True))
                 if m:
                     v = float(m.group(1))
-                    if 0 < v < 20:   # �啣虜�日憭�
+                    if 0 < v < 20:   # 異常値除外
                         dividend_yield = round(v, 2)
                         break
 
-    # �� 憯脖�擃���嚗�
-    sales = extract_column(t0, '��') or extract_column(t0, '憯脖�')
+    # ① 売上高（収益）
+    sales = extract_column(t0, '収益') or extract_column(t0, '売上')
     sales_trend = calc_trend(sales)
 
-    # �� EPS
+    # ② EPS
     eps = extract_column(t0, 'EPS')
     eps_trend = calc_trend(eps)
 
-    # �� �嗆平�拍���
-    margin = extract_column(t0, '�嗅��')
+    # ③ 営業利益率
+    margin = extract_column(t0, '営利率')
     operating_margin = last_valid(margin)
     if operating_margin is not None:
         operating_margin = round(operating_margin, 1)
 
-    # �� �芸楛鞈瘥�嚗R BANK�扼�撌梯��祆���嚗�
-    equity = extract_column(t1, '�芸暘X��祆���') or extract_column(t1, '�芯蜓鞈瘥�')
+    # ④ 自己資本比率（IR BANKでは「自己資本比率」列）
+    equity = extract_column(t1, '自己資本比率') or extract_column(t1, '株主資本比率')
     equity_ratio = last_valid(equity)
     if equity_ratio is not None:
         equity_ratio = round(equity_ratio, 1)
 
-    # �� �嗆平CF
-    ocf = extract_column(t2, '�嗆平CF')
+    # ⑤ 営業CF
+    ocf = extract_column(t2, '営業CF')
     operating_cf = cf_status(ocf)
 
-    # �� �暸�蝑�
-    cash = extract_column(t2, '�暸�蝑�')
+    # ⑥ 現金等
+    cash = extract_column(t2, '現金等')
     cash_trend = calc_trend(cash)
 
-    # �� 1�芷�敶�
-    div = extract_column(t3, '銝�芷�敶�')
+    # ⑦ 1株配当金
+    div = extract_column(t3, '一株配当')
     dividend_trend = dividend_status(div)
 
-    # �� ���批�
-    payout = extract_column(t3, '���批�')
+    # ⑧ 配当性向
+    payout = extract_column(t3, '配当性向')
     payout_ratio = last_valid(payout)
     if payout_ratio is not None:
         payout_ratio = round(payout_ratio, 1)
@@ -286,19 +286,19 @@ def scrape_irbank(code):
         'name': company_name,
         'code': code,
         'dividend_yield': dividend_yield,
-        # ��喋�蝟� (up/flat/down/unknown)
+        # トレンド系 (up/flat/down/unknown)
         'sales_trend': sales_trend,
         'eps_trend': eps_trend,
-        # �啣斤頂
+        # 数値系
         'operating_margin': operating_margin,
         'equity_ratio': equity_ratio,
         # CF
         'operating_cf': operating_cf,   # up_positive/positive/has_negative/unknown
         'cash_trend': cash_trend,
-        # ��
+        # 配当
         'dividend_trend': dividend_trend,   # stable_growing/stable/has_cut/unknown
         'payout_ratio': payout_ratio,
-        # �����
+        # デバッグ用
         '_debug': {
             'sales_recent':  [(y, v) for y, v in sales[-5:]  if v is not None],
             'eps_recent':    [(y, v) for y, v in eps[-5:]    if v is not None],
@@ -313,89 +313,89 @@ def scrape_irbank(code):
 
 
 # ==================================================
-#  擃�敶����芥���准�研�瑯�單��輻�130��嚗�
+#  高配当候補銘柄リスト（キュレーション済み約130銘柄）
 # ==================================================
-# 憭�萸��柴�胯�扎��喋�臭�摰��芥���
-# �交撣�折����具��衣���誨銵函��芷�����芥��靽���
+# 外部サイトへのスクレイピングは不安定なため、
+# 日本市場で高配当として知られる代表的な銘柄を内蔵リストとして保持。
 _CANDIDATE_STOCKS = [
-    # �冗
-    ('8058','銝��'),('8031','銝��拍'),('8053','雿���'),
-    ('8001','隡敹�鈭�'),('8002','銝貊�'),('8015','鞊��'),
-    ('4768','�'),('8088','撗抵健��平'),('8081','�怒��'),
-    # �縑
-    ('9432','NTT'),('9433','KDDI'),('9434','�賬����喋'),
-    # �銵��
-    ('8316','銝�雿�FG'),('8306','銝UFJ FG'),('8411','�踴��肇G'),
-    ('7182','���～��銵�'),('8354','�賬���FG'),('8473','SBI HD'),
-    ('8253','�胯��颯��'),('8309','銝�雿���嫘�HD'),
-    ('7186','�喋�喋��￠G'),('8327','撅勗FG'),
-    ('7181','���賜���'),('8308','���杳D'),
-    # 靽
-    ('8725','MS&AD�扎�瑯�Ｕ�喋G'),('8766','�曹漪瘚瑚�HD'),
-    ('8750','蝚砌��HD'),('8630','SOMPO��怒����啜'),
-    # 閮澆
-    ('8601','憭批�閮澆G�祉冗'),('8604','��HD'),('8628','�曆�閮澆'),
-    ('8698','����逼'),('7164','�典靽釆'),
-    # �具��怒�潦鞈�
-    ('1605','INPEX'),('5019','�箏��'),('5020','ENEOS��怒����啜'),
-    # ��駁�撅�
-    ('5401','�交鋆賡�'),('5411','JFE��怒����啜'),
-    ('5713','雿����勗控'),('3436','SUMCO'),
-    # �郎
-    ('4063','靽∟��郎撌交平'),('4005','雿��郎'),('4188','銝�晞��怒G'),
-    ('4183','銝��郎'),('4021','�亦�郎'),('3407','�剖���'),
-    ('4612','�交��喋�HD'),
-    # 蝝���
-    ('3861','��HD'),('3863','�交鋆賜�'),('3105','�交�蝝？D'),
-    # 瘚琿�嚗��擃�嚗�
-    ('9101','�交�菔'),('9104','�銝�'),('9107','撌�瘙質'),
-    # �賊��餌瘚�
-    ('9064','�扎��D'),('9062','�交��'),('9006','鈭祆仿��'),
-    # �餃��潦��
-    ('9501','�曹漪�餃�HD'),('9502','銝剝�餃�'),('9503','�Ｚ正�餃�'),
-    ('9531','�曹漪�研'),('9532','憭折�研'),
-    # 憌��駁ㄡ����
-    ('2914','JT'),('2502','�Ｕ�HD'),('2503','�准�蚵D'),
-    ('2282','�交��'),('2269','�祥HD'),('2801','�准��喋�'),
-    ('2587','�萸��劉F'),('1332','���嫘'),('1301','璆菜�'),
-    # �餉��
-    ('4502','甇衣�砍�撌交平'),('4519','銝剖�鋆質'),('4568','蝚砌�銝'),
-    ('4523','�具�嗚'),('4507','憛拚�蝢抵ˊ��'),('4543','���'),
-    # �芸�頠頛賊���
-    ('7203','��輯��'),('7267','�祉��極璆�'),('7270','SUBARU'),
-    ('7269','�嫘��'),('7272','�扎����'),('6902','DENSO'),
-    ('7202','����'),('7201','�亦�芸�頠�'),('7012','撌��極璆�'),
-    # �餅��餅�璇�
-    ('6501','�亦�鋆賭��'),('6503','銝�餅�'),('6752','���賬��HD'),
-    ('6301','�喋���'),('6326','�胯���'),('7011','銝�極璆�'),
-    ('7751','�准�'),('6724','�颯�喋�具��賬'),('6702','撖ㄚ��'),
-    ('6723','�怒��萸�具�胯��准��胯'),('6857','�Ｕ�����'),
-    ('6981','�鋆賭��'),('4901','撖ㄚ��怒�HD'),
-    ('6503','銝�餅�'),('4307','��蝺��弦�'),
-    # 銝���撱箄身
-    ('8802','銝�唳�'),('8804','�望乩��HD'),('8830','雿�銝���'),
-    ('8801','銝�銝���'),('1928','蝛偌���'),('1925','憭批���孵極璆�'),
-    ('3003','��潦�'),('1802','憭扳�蝯�'),('1803','皜偌撱箄身'),
-    ('1801','憭扳�撱箄身'),('1812','暽踹雀撱箄身'),
-    # 撠ㄡ�颯�潦���
-    ('8267','�扎��'),('3382','�颯���&�ＵHD'),('2651','�准�賬'),
-    ('3099','銝�隡銝違D'),('9843','���杳D'),
-    # 蝝��颯��桐�鋆賡�
-    ('4452','�梁�'),('4911','鞈���'),('5802','雿��餅�撌交平'),
-    ('9101','�交�菔'),('6703','OKI'),
-    ('8096','�潭�具�胯��准��胯'),
-    # �芰征�颱漱��
-    ('5202','ANA��怒����啜'),('5201','�交�芰征'),
-    # �扎�踴���IT
-    ('6098','�芥�怒�D'),('9984','�賬����喋G'),
-    # �隞����具��西店憿��
-    ('8252','銝訾�G'),('5943','��芥�'),('7014','����'),
-    ('8075','蟡��'),('5901','�望�鋆賜�GHD'),
-    ('9783','���HD'),('4816','�望��Ｕ��～�瑯��'),
+    # 商社
+    ('8058','三菱商事'),('8031','三井物産'),('8053','住友商事'),
+    ('8001','伊藤忠商事'),('8002','丸紅'),('8015','豊田通商'),
+    ('2768','双日'),('8088','岩谷産業'),('8081','カナデン'),
+    # 通信
+    ('9432','NTT'),('9433','KDDI'),('9434','ソフトバンク'),
+    # 銀行・金融
+    ('8316','三井住友FG'),('8306','三菱UFJ FG'),('8411','みずほFG'),
+    ('7182','ゆうちょ銀行'),('8354','ふくおかFG'),('8473','SBI HD'),
+    ('8253','クレディセゾン'),('8309','三井住友トラストHD'),
+    ('7186','コンコルディアFG'),('8327','山口FG'),
+    ('7181','かんぽ生命'),('8308','りそなHD'),
+    # 保険
+    ('8725','MS&ADインシュアランスG'),('8766','東京海上HD'),
+    ('8750','第一生命HD'),('8630','SOMPOホールディングス'),
+    # 証券
+    ('8601','大和証券G本社'),('8604','野村HD'),('8628','松井証券'),
+    ('8698','マネックスG'),('7164','全国保証'),
+    # エネルギー・資源
+    ('1605','INPEX'),('5019','出光興産'),('5020','ENEOSホールディングス'),
+    # 鉄鋼・金属
+    ('5401','日本製鉄'),('5411','JFEホールディングス'),
+    ('5713','住友金属鉱山'),('3436','SUMCO'),
+    # 化学
+    ('4063','信越化学工業'),('4005','住友化学'),('4188','三菱ケミカルG'),
+    ('4183','三井化学'),('4021','日産化学'),('3407','旭化成'),
+    ('4612','日本ペイントHD'),
+    # 紙・パルプ
+    ('3861','王子HD'),('3863','日本製紙'),('3105','日清紡HD'),
+    # 海運（利回り高め）
+    ('9101','日本郵船'),('9104','商船三井'),('9107','川崎汽船'),
+    # 陸運・物流
+    ('9064','ヤマトHD'),('9062','日本通運'),('9006','京急電鉄'),
+    # 電力・ガス
+    ('9501','東京電力HD'),('9502','中部電力'),('9503','関西電力'),
+    ('9531','東京ガス'),('9532','大阪ガス'),
+    # 食品・飲料・たばこ
+    ('2914','JT'),('2502','アサヒGHD'),('2503','キリンHD'),
+    ('2282','日本ハム'),('2269','明治HD'),('2801','キッコーマン'),
+    ('2587','サントリーBF'),('1332','ニッスイ'),('1301','極洋'),
+    # 医薬品
+    ('4502','武田薬品工業'),('4519','中外製薬'),('4568','第一三共'),
+    ('4523','エーザイ'),('4507','塩野義製薬'),('4543','テルモ'),
+    # 自動車・輸送機器
+    ('7203','トヨタ自動車'),('7267','本田技研工業'),('7270','SUBARU'),
+    ('7269','スズキ'),('7272','ヤマハ発動機'),('6902','DENSO'),
+    ('7202','いすゞ自動車'),('7201','日産自動車'),('7012','川崎重工業'),
+    # 電機・機械
+    ('6501','日立製作所'),('6503','三菱電機'),('6752','パナソニックHD'),
+    ('6301','コマツ'),('6326','クボタ'),('7011','三菱重工業'),
+    ('7751','キヤノン'),('6724','セイコーエプソン'),('6702','富士通'),
+    ('6723','ルネサスエレクトロニクス'),('6857','アドバンテスト'),
+    ('6981','村田製作所'),('4901','富士フイルムHD'),
+    ('6503','三菱電機'),('4307','野村総合研究所'),
+    # 不動産・建設
+    ('8802','三菱地所'),('8804','東急不動産HD'),('8830','住友不動産'),
+    ('8801','三井不動産'),('1928','積水ハウス'),('1925','大和ハウス工業'),
+    ('3003','ヒューリック'),('1802','大林組'),('1803','清水建設'),
+    ('1801','大成建設'),('1812','鹿島建設'),
+    # 小売・サービス
+    ('8267','イオン'),('3382','セブン&アイHD'),('2651','ローソン'),
+    ('3099','三越伊勢丹HD'),('9843','ニトリHD'),
+    # 素材・その他製造
+    ('4452','花王'),('4911','資生堂'),('5802','住友電気工業'),
+    ('9101','日本郵船'),('6703','OKI'),
+    ('8096','兼松エレクトロニクス'),
+    # 航空・交通
+    ('9202','ANAホールディングス'),('9201','日本航空'),
+    # インターネット・IT
+    ('6098','リクルートHD'),('9984','ソフトバンクG'),
+    # その他高配当として話題の銘柄
+    ('8252','丸井G'),('5943','ノーリツ'),('7014','名村造船所'),
+    ('8075','神鋼商事'),('5901','東洋製罐GHD'),
+    ('9783','ベネッセHD'),('4816','東映アニメーション'),
 ]
 
 def get_dividend_ranking(max_stocks=120):
-    """擃�敶����芥��餈�嚗��萸�乓�潦�扼皜�芥��"""
+    """高配当候補銘柄リストを返す（内蔵キュレーション済みリスト）"""
     seen = set()
     result = []
     for code, name in _CANDIDATE_STOCKS:
@@ -407,9 +407,9 @@ def get_dividend_ranking(max_stocks=120):
 
 def fetch_yahoo_ranking(max_stocks=300):
     """
-    �扎��潦��～��嫘���拙���喋�喋�����喋��������
-    �憭� max_stocks 隞嗅�敺��西���4獢閮澆�喋��踵�綽���
-    憭望�� _CANDIDATE_STOCKS �怒��押�怒����
+    ヤフーファイナンスの配当利回りランキングから銘柄コードを取得する。
+    最大 max_stocks 件取得して返す（4桁の証券コードのみ抽出）。
+    失敗時は _CANDIDATE_STOCKS にフォールバック。
     """
     base_url = 'https://finance.yahoo.co.jp/stocks/ranking/dividendYield?market=all&page={}'
     headers = {
@@ -425,10 +425,10 @@ def fetch_yahoo_ranking(max_stocks=300):
 
     seen = set()
     result = []
-    # 1��詻���蝝�47����閬��潦�啜����怨�蝞����+3��賂�
+    # 1ページあたり約47銘柄。必要ページ数を動的に計算（バッファ+3ページ）
     import math
-    max_pages = min(math.ceil(max_stocks / 47) + 3, 100)  # �憭�100���
-    consecutive_empty = 0  # ���蝛箝��潦�怒�喋�
+    max_pages = min(math.ceil(max_stocks / 47) + 3, 100)  # 最大100ページ
+    consecutive_empty = 0  # 連続空ページカウント
 
     for page in range(1, max_pages + 1):
         if len(result) >= max_stocks:
@@ -439,7 +439,7 @@ def fetch_yahoo_ranking(max_stocks=300):
             resp.raise_for_status()
             soup = BeautifulSoup(resp.text, 'html.parser')
 
-            # 閮澆�喋� <li class="*supplement*"> ��4獢摮��乓�
+            # 証券コードは <li class="*supplement*"> に4桁数字として入る
             codes_found = 0
             for li in soup.find_all('li', class_=lambda c: c and 'supplement' in c):
                 text = li.get_text(strip=True)
@@ -450,34 +450,34 @@ def fetch_yahoo_ranking(max_stocks=300):
                     if len(result) >= max_stocks:
                         break
 
-            print(f"  Yahoo Finance p{page}/{max_pages}: {codes_found}隞嗅�敺�蝝航�{len(result)}隞塚�")
+            print(f"  Yahoo Finance p{page}/{max_pages}: {codes_found}件取得（累計{len(result)}件）")
 
             if codes_found == 0:
                 consecutive_empty += 1
-                print(f"  p{page} �扼��潦�芥�嚗��{consecutive_empty}��")
+                print(f"  p{page} でデータなし（連続{consecutive_empty}回）")
                 if consecutive_empty >= 2:
-                    # 2��賊���扼��潦�芥� �� �押�准�啁�蝡胯�踴��
-                    print("  �押�准�啁�蝡胯���整��� �� 蝯�")
+                    # 2ページ連続でデータなし → ランキング終端とみなす
+                    print("  ランキング終端に達しました → 終了")
                     break
             else:
-                consecutive_empty = 0  # ��踴����啜�颯���
+                consecutive_empty = 0  # データがあればリセット
 
         except Exception as e:
-            print(f"  Yahoo Finance p{page} ��憭望�: {e}")
+            print(f"  Yahoo Finance p{page} 取得失敗: {e}")
             consecutive_empty += 1
             if consecutive_empty >= 3:
                 break
 
     if not result:
-        # ��潦���荔���芥��雿輻
-        print("  Yahoo Finance ��憭望� �� ��芥���潦����")
+        # フォールバック：内蔵リストを使用
+        print("  Yahoo Finance 取得失敗 → 内蔵リストにフォールバック")
         return get_dividend_ranking(max_stocks)
 
     return result
 
 
 # ==================================================
-#  Flask �怒��喋
+#  Flask ルーティング
 # ==================================================
 @app.route('/')
 def index():
@@ -500,7 +500,7 @@ def yahoo_ranking():
     try:
         from flask import request as flask_request
         count = flask_request.args.get('count', 300, type=int)
-        count = max(50, min(count, 2000))   # 50��2000�桃��脯�園�
+        count = max(50, min(count, 2000))   # 50〜2000の範囲に制限
         stocks = fetch_yahoo_ranking(max_stocks=count)
         return jsonify({'success': True, 'stocks': stocks, 'count': len(stocks)})
     except Exception as e:
@@ -517,19 +517,19 @@ def get_stock(code):
         status = e.response.status_code if e.response else '?'
         return jsonify({
             'success': False,
-            'error': f'�����扎����嚗TTP {status}嚗釆�詻�潦��Ⅱ隤��艾�����'
+            'error': f'銘柄が見つかりません（HTTP {status}）。証券コードを確認してください。'
         }), 404
 
     except requests.exceptions.ConnectionError:
         return jsonify({
             'success': False,
-            'error': 'IR BANK �詻�亦��怠仃���整���喋�潦����亦��Ⅱ隤��艾�����'
+            'error': 'IR BANK への接続に失敗しました。インターネット接続を確認してください。'
         }), 503
 
     except requests.exceptions.Timeout:
         return jsonify({
             'success': False,
-            'error': 'IR BANK �詻�亦���扎��Ｕ���整����啜����艾���閰西��������'
+            'error': 'IR BANK への接続がタイムアウトしました。しばらくしてから再試行してください。'
         }), 504
 
     except Exception as e:
@@ -537,7 +537,7 @@ def get_stock(code):
 
 
 # ==================================================
-#  韏瑕�
+#  起動
 # ==================================================
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8080))
@@ -545,10 +545,10 @@ if __name__ == '__main__':
 
     print()
     print('=' * 52)
-    print('  �� �芥�憭扳� 擃�敶�詨���')
+    print('  📈 リベ大流 高配当株選別ツール')
     print('=' * 52)
-    print(f'  �� URL  : {url}')
-    print('  �� 蝯� : Ctrl+C')
+    print(f'  🌐 URL  : {url}')
+    print('  🛑 終了 : Ctrl+C')
     print('=' * 52)
     print()
 
