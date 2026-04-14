@@ -1,0 +1,1605 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ðŸ“ˆ ãƒªãƒ™å¤§æµ é«˜é…å½“æ ª é¸åˆ¥ãƒ„ãƒ¼ãƒ«</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Yu Gothic', sans-serif;
+      background: #eef2f7;
+      color: #1e293b;
+      min-height: 100vh;
+    }
+
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, #0f2a54 0%, #1d4ed8 100%);
+      color: white;
+      padding: 22px 32px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 4px 20px rgba(15,42,84,0.3);
+    }
+    .header-icon { font-size: 2.4rem; }
+    .header h1 { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; }
+    .header p { font-size: 0.82rem; opacity: 0.75; margin-top: 3px; }
+
+    /* Layout */
+    .main { max-width: 1340px; margin: 0 auto; padding: 24px; }
+
+    .top-grid {
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      gap: 22px;
+      align-items: start;
+      margin-bottom: 22px;
+    }
+    @media (max-width: 960px) { .top-grid { grid-template-columns: 1fr; } }
+
+    /* Card */
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 22px 24px;
+      box-shadow: 0 2px 14px rgba(0,0,0,0.07);
+      margin-bottom: 0;
+    }
+    .card-title {
+      font-size: 1rem;
+      font-weight: 800;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #0f172a;
+    }
+    .mb-22 { margin-bottom: 22px; }
+
+    /* Form grid */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    @media (max-width: 560px) { .form-grid { grid-template-columns: 1fr; } }
+    .span-2 { grid-column: 1 / -1; }
+
+    .section-label {
+      grid-column: 1 / -1;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 10px 0 2px;
+      border-top: 1px solid #f1f5f9;
+      margin-top: 4px;
+    }
+
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-group label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #374151;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .max-pts {
+      font-size: 0.72rem;
+      color: #94a3b8;
+      font-weight: 400;
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      padding: 9px 11px;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      color: #1e293b;
+      background: white;
+      transition: border-color 0.18s, box-shadow 0.18s;
+    }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
+    }
+    .form-group small { font-size: 0.72rem; color: #94a3b8; line-height: 1.4; }
+    .form-group textarea { resize: vertical; min-height: 72px; }
+
+    /* Buttons */
+    .btn {
+      padding: 10px 22px;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+    .btn-primary { background: #1d4ed8; color: white; }
+    .btn-primary:hover { background: #1e40af; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(29,78,216,0.35); }
+    .btn-secondary { background: #f1f5f9; color: #475569; }
+    .btn-secondary:hover { background: #e2e8f0; }
+    .btn-sm { padding: 5px 12px; font-size: 0.78rem; }
+    .btn-edit { background: #dbeafe; color: #1d4ed8; }
+    .btn-edit:hover { background: #bfdbfe; }
+    .btn-danger { background: #fee2e2; color: #dc2626; }
+    .btn-danger:hover { background: #fecaca; }
+    .form-actions { display: flex; gap: 10px; margin-top: 16px; grid-column: 1/-1; }
+
+    /* Score panel */
+    .score-panel { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+    .empty-state { text-align: center; padding: 32px 16px; color: #94a3b8; }
+    .empty-icon { font-size: 2.8rem; margin-bottom: 8px; }
+    .empty-state p { font-size: 0.85rem; line-height: 1.6; }
+
+    /* Verdict badge */
+    .verdict {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 9px 18px;
+      border-radius: 999px;
+      font-size: 0.92rem;
+      font-weight: 800;
+    }
+    .v-excellent { background: #dcfce7; color: #15803d; }
+    .v-good      { background: #dbeafe; color: #1d4ed8; }
+    .v-caution   { background: #fef3c7; color: #92400e; }
+    .v-bad       { background: #fee2e2; color: #b91c1c; }
+
+    /* Criteria list */
+    .crit-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 11px;
+      border-radius: 8px;
+      margin-bottom: 4px;
+      font-size: 0.82rem;
+      width: 100%;
+    }
+    .crit-pass    { background: #f0fdf4; }
+    .crit-caution { background: #fffbeb; }
+    .crit-fail    { background: #fff1f2; }
+    .crit-empty   { background: #f8fafc; }
+
+    .crit-right { display: flex; align-items: center; gap: 7px; }
+    .crit-label { font-size: 0.76rem; color: #64748b; }
+    .crit-pts   { font-size: 0.76rem; color: #94a3b8; }
+
+    .badge-s {
+      font-size: 0.72rem;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 999px;
+    }
+    .bp { background: #16a34a; color: white; }
+    .bc { background: #d97706; color: white; }
+    .bf { background: #dc2626; color: white; }
+    .be { background: #94a3b8; color: white; }
+
+    /* KO badges */
+    .ko-wrap { width: 100%; }
+    .ko-title { font-size: 0.78rem; font-weight: 700; color: #dc2626; margin-bottom: 5px; }
+    .ko-badges { display: flex; flex-wrap: wrap; gap: 5px; }
+    .ko-b {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: #fee2e2;
+      color: #dc2626;
+    }
+    /* KO detail explanations */
+    .ko-details {
+      width: 100%;
+      margin-top: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+    .ko-detail-item {
+      background: #fff5f5;
+      border: 1px solid #fca5a5;
+      border-left: 4px solid #dc2626;
+      border-radius: 8px;
+      padding: 9px 12px;
+    }
+    .ko-detail-name {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #b91c1c;
+      display: block;
+      margin-bottom: 3px;
+    }
+    .ko-detail-text {
+      font-size: 0.76rem;
+      color: #7f1d1d;
+      line-height: 1.55;
+    }
+
+    /* Comparison table */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
+    th {
+      background: #f8fafc;
+      padding: 9px 11px;
+      text-align: left;
+      font-weight: 700;
+      color: #475569;
+      border-bottom: 2px solid #e2e8f0;
+      white-space: nowrap;
+    }
+    td {
+      padding: 10px 11px;
+      border-bottom: 1px solid #f1f5f9;
+      vertical-align: middle;
+    }
+    tr:hover td { background: #f8fafc; }
+
+    /* Score bar */
+    .s-bar { display: flex; align-items: center; gap: 8px; min-width: 140px; }
+    .s-bar-bg { flex: 1; height: 7px; background: #e2e8f0; border-radius: 999px; overflow: hidden; }
+    .s-bar-fill { height: 100%; border-radius: 999px; transition: width 0.5s ease; }
+    .fill-ex { background: linear-gradient(90deg, #15803d, #22c55e); }
+    .fill-go { background: linear-gradient(90deg, #1d4ed8, #60a5fa); }
+    .fill-ca { background: linear-gradient(90deg, #d97706, #fbbf24); }
+    .fill-ba { background: linear-gradient(90deg, #b91c1c, #f87171); }
+    .s-num { font-weight: 800; min-width: 30px; text-align: right; }
+
+    /* Tips section */
+    .tips-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 11px;
+    }
+    .tip-item {
+      padding: 13px 14px;
+      border-radius: 10px;
+      font-size: 0.81rem;
+      line-height: 1.55;
+    }
+
+    /* Dot indicators */
+    .dot-row { display: flex; gap: 3px; flex-wrap: nowrap; }
+    .dot { font-size: 0.9rem; }
+
+    .stock-name { font-weight: 700; font-size: 0.9rem; }
+    .stock-meta { font-size: 0.74rem; color: #94a3b8; margin-top: 2px; }
+    .yield-val { font-weight: 800; color: #15803d; }
+
+    .action-btns { display: flex; gap: 5px; }
+
+    /* Memo cell */
+    .memo-cell {
+      max-width: 160px;
+      font-size: 0.78rem;
+      color: #64748b;
+      white-space: normal;
+      line-height: 1.4;
+    }
+
+    .divider { border: none; border-top: 1px solid #e2e8f0; margin: 0; }
+
+    .count-badge {
+      display: inline-block;
+      background: #1d4ed8;
+      color: white;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 2px 9px;
+      border-radius: 999px;
+      margin-left: 8px;
+    }
+
+    /* Auto-fetch styles */
+    .fetch-row {
+      display: flex;
+      gap: 8px;
+      align-items: stretch;
+    }
+    .fetch-row input {
+      flex: 1;
+    }
+    .btn-fetch {
+      background: linear-gradient(135deg, #0ea5e9, #2563eb);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 9px 14px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.18s;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .btn-fetch:hover:not(:disabled) {
+      background: linear-gradient(135deg, #0284c7, #1d4ed8);
+      transform: translateY(-1px);
+      box-shadow: 0 3px 10px rgba(37,99,235,0.35);
+    }
+    .btn-fetch:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    .fetch-status {
+      grid-column: 1 / -1;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      display: none;
+      align-items: flex-start;
+      gap: 8px;
+      line-height: 1.5;
+    }
+    .fetch-status.show { display: flex; }
+    .fetch-status.loading { background: #eff6ff; color: #1d4ed8; }
+    .fetch-status.success { background: #f0fdf4; color: #15803d; }
+    .fetch-status.error   { background: #fff1f2; color: #b91c1c; }
+
+    .fetch-spinner {
+      width: 14px; height: 14px;
+      border: 2px solid currentColor;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .server-notice {
+      grid-column: 1 / -1;
+      background: #fefce8;
+      border: 1px solid #fde047;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 0.78rem;
+      color: #713f12;
+      line-height: 1.55;
+    }
+    .server-notice strong { color: #92400e; }
+
+    .debug-table {
+      width: 100%;
+      font-size: 0.75rem;
+      border-collapse: collapse;
+      margin-top: 6px;
+    }
+    .debug-table th { background:#e0f2fe; padding:3px 7px; text-align:left; }
+    .debug-table td { padding:3px 7px; border-bottom:1px solid #e2e8f0; }
+
+    /* ä»¶æ•°é¸æŠžãƒœã‚¿ãƒ³ */
+    .count-btn {
+      padding: 8px 16px;
+      background: #f8fafc;
+      border: 2px solid #e2e8f0;
+      border-radius: 10px;
+      font-size: 0.83rem;
+      font-weight: 700;
+      color: #64748b;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: center;
+      min-width: 72px;
+    }
+    .count-btn:hover { border-color: #a78bfa; color: #4f46e5; background: #f5f3ff; }
+    .count-btn-active {
+      border-color: #4f46e5;
+      background: linear-gradient(135deg, #ede9fe, #f0f7ff);
+      color: #4f46e5;
+    }
+
+    /* Bulk screening */
+    .btn-bulk {
+      padding: 11px 22px;
+      background: linear-gradient(135deg, #7c3aed, #4f46e5);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.92rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-bulk:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(79,70,229,0.4); }
+    .btn-bulk:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .bulk-progress-bar {
+      background: #e2e8f0;
+      border-radius: 999px;
+      height: 10px;
+      overflow: hidden;
+      margin: 8px 0;
+    }
+    .bulk-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #7c3aed, #0ea5e9);
+      border-radius: 999px;
+      width: 0%;
+      transition: width 0.4s ease;
+    }
+    .bulk-result-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+    }
+    .bulk-result-table th {
+      background: #f8fafc;
+      border-bottom: 2px solid #e2e8f0;
+      padding: 9px 10px;
+      text-align: left;
+      font-weight: 700;
+      color: #475569;
+      white-space: nowrap;
+    }
+    .bulk-result-table td {
+      padding: 9px 10px;
+      border-bottom: 1px solid #f1f5f9;
+      vertical-align: middle;
+    }
+    .bulk-result-table tr:hover td { background: #fafafa; }
+    .btn-add-stock {
+      font-size: 0.74rem;
+      padding: 4px 10px;
+      background: #eff6ff;
+      border: 1px solid #93c5fd;
+      border-radius: 6px;
+      cursor: pointer;
+      color: #1d4ed8;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .btn-add-stock:hover { background: #dbeafe; }
+    .btn-add-stock.added { background: #f0fdf4; border-color: #86efac; color: #15803d; }
+
+    /* Autocomplete dropdown */
+    .ac-wrap { position: relative; }
+    .ac-dropdown {
+      position: absolute;
+      top: calc(100% + 3px);
+      left: 0;
+      right: 0;
+      background: #fff;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      box-shadow: 0 8px 28px rgba(0,0,0,0.13);
+      max-height: 220px;
+      overflow-y: auto;
+      z-index: 2000;
+      display: none;
+    }
+    .ac-dropdown.open { display: block; }
+    .ac-item {
+      padding: 9px 13px;
+      cursor: pointer;
+      font-size: 0.84rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #f1f5f9;
+      transition: background 0.1s;
+    }
+    .ac-item:last-child { border-bottom: none; }
+    .ac-item:hover, .ac-item.ac-active { background: #eff6ff; }
+    .ac-item-name { color: #1e293b; font-weight: 500; }
+    .ac-item-code { color: #64748b; font-size: 0.78rem; font-family: monospace; background:#f1f5f9; padding:2px 6px; border-radius:5px; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-icon">ðŸ“ˆ</div>
+  <div>
+    <h1>ãƒªãƒ™å¤§æµ é«˜é…å½“æ ª é¸åˆ¥ãƒ„ãƒ¼ãƒ«</h1>
+    <p>ãƒªãƒ™ãƒ©ãƒ«ã‚¢ãƒ¼ãƒ„å¤§å­¦ã®8é …ç›®åŸºæº–ã§ã‚¹ã‚³ã‚¢ãƒªãƒ³ã‚°ãƒ»æ¯”è¼ƒ â€” æ—¥æœ¬æ ªå°‚ç”¨ &nbsp;|&nbsp; è¨¼åˆ¸ã‚³ãƒ¼ãƒ‰ã‚’å…¥åŠ›ã™ã‚‹ã ã‘ã§ IR BANK ã‹ã‚‰è‡ªå‹•å–å¾—</p>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- Top: Form + Score -->
+  <div class="top-grid">
+
+    <!-- Form -->
+    <div class="card mb-22">
+      <div class="card-title">ðŸ” éŠ˜æŸ„ã‚’è©•ä¾¡ã™ã‚‹</div>
+      <div class="form-grid">
+
+        <div class="section-label">ðŸ“‹ åŸºæœ¬æƒ…å ±</div>
+
+        <!-- ã‚µãƒ¼ãƒãƒ¼èµ·å‹•æ¡ˆå†… -->
+        <div class="server-notice span-2">
+          <strong>ðŸ¤– IR BANK è‡ªå‹•å–å¾—æ©Ÿèƒ½ã®ä½¿ã„æ–¹</strong><br>
+          â‘  <code>server.py</code> ã¨åŒã˜ãƒ•ã‚©ãƒ«ãƒ€ã§ã‚¿ãƒ¼ãƒŸãƒŠãƒ«ã‚’é–‹ã <code>python server.py</code> ã‚’å®Ÿè¡Œ<br>
+          â‘¡ ã“ã®ãƒšãƒ¼ã‚¸ã‚’ <strong>http://localhost:8080</strong> ã§é–‹ãï¼ˆãƒ–ãƒ©ã‚¦ã‚¶ãŒè‡ªå‹•ã§é–‹ãã¾ã™ï¼‰<br>
+          â‘¢ è¨¼åˆ¸ã‚³ãƒ¼ãƒ‰ã‚’å…¥åŠ›ã—ã¦ã€ŒðŸ”„ è‡ªå‹•å–å¾—ã€ã‚’ã‚¯ãƒªãƒƒã‚¯ã™ã‚‹ã ã‘ï¼&nbsp;
+          <span style="color:#0369a1">ã‚µãƒ¼ãƒãƒ¼ä¸è¦ã®å ´åˆã¯æ‰‹å‹•ã§å„é …ç›®ã‚’å…¥åŠ›ã—ã¦ãã ã•ã„ã€‚</span>
+        </div>
+
+        <!-- ãƒ•ã‚§ãƒƒãƒã‚¹ãƒ¶ãƒ¼ã‚¿ã‚¹ -->
+        <div class="fetch-status span-2" id="fetchStatus"></div>
+
+        <div class="form-group">
+          <label>éŠ˜æŸ„å <span style="color:#ef4444">*</span></label>
+          <div class="ac-wrap">
+            <input type="text" id="f_name" placeholder="ä¾‹ï¼šKDDIï¼ˆè‡ªå‹•å–å¾—ã§è‡ªå‹•å…¥åŠ›ï¼‰" autocomplete="off" />
+            <div id="nameDropdown" class="ac-dropdown"></div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>è¨¼åˆ¸ã‚³ãƒ¼ãƒ‰ &nbsp;<span style="font-size:0.72rem;color:#0ea5e9;font-weight:600">â† å…¥åŠ›ã—ã¦è‡ªå‹•å–å¾—</span></label>
+          <div class="ac-wrap">
+            <div class="fetch-row">
+              <input type="text" id="f_code" placeholder="ä¾‹ï¼š9433" autocomplete="off" onkeydown="if(event.key==='Enter')fetchFromIRBank()" />
+              <button class="btn-fetch" id="fetchBtn" onclick="fetchFromIRBank()">ðŸ”„ è‡ªå‹•å–å¾—</button>
+            </div>
+            <div id="codeDropdown" class="ac-dropdown"></div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>é…å½“åˆ©å›žã‚Šï¼ˆ%ï¼‰</label>
+          <input type="number" id="f_yield" placeholder="ä¾‹ï¼š3.5ï¼ˆè‡ªå‹•å–å¾—ã§è‡ªå‹•å…¥åŠ›ï¼‰" step="0.01" min="0" max="30" />
+        </div>
+        <div class="form-group">
+          <label>æ¥­ç¨®ãƒ»ã‚»ã‚¯ã‚¿ãƒ¼</label>
+          <input type="text" id="f_sector" placeholder="ä¾‹ï¼šé€šä¿¡" />
+        </div>
+
+        <div class="section-label">ðŸ“Š IR BANK 8é …ç›®ãƒã‚§ãƒƒã‚¯</div>
+
+        <div class="form-group">
+          <label>â‘  å£²ä¸Šé«˜ãƒˆãƒ¬ãƒ³ãƒ‰ <span class="max-pts">æœ€å¤§10pt</span></label>
+          <select id="f_sales">
+            <option value="">-- é¸æŠž --</option>
+            <option value="10">å³è‚©ä¸ŠãŒã‚Šï¼ˆå®‰å®šå¢—åŠ ï¼‰</option>
+            <option value="5">æ¨ªã°ã„ï¼ˆå®‰å®šç¶­æŒï¼‰</option>
+            <option value="0">ä¸‹è½å‚¾å‘</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>â‘¡ EPSï¼ˆ1æ ªå½“ãŸã‚Šåˆ©ç›Šï¼‰<span class="max-pts">æœ€å¤§15pt</span></label>
+          <select id="f_eps">
+            <option value="">-- é¸æŠž --</option>
+            <option value="15">å³è‚©ä¸ŠãŒã‚Šï¼ˆç¶™ç¶šå¢—åŠ ï¼‰</option>
+            <option value="7">æ¨ªã°ã„ï¼ˆå®‰å®šï¼‰</option>
+            <option value="0">ä¸‹è½ãƒ»ãƒžã‚¤ãƒŠã‚¹å‚¾å‘</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>â‘¢ å–¶æ¥­åˆ©ç›ŠçŽ‡ï¼ˆ%ï¼‰<span class="max-pts">æœ€å¤§15pt</span></label>
+          <input type="number" id="f_om" placeholder="ä¾‹ï¼š15.2" step="0.1" min="0" max="100" />
+          <small>10%ä»¥ä¸Š â—Žã€€5ã€œ10% â—‹ã€€5%æœªæº€ Ã—</small>
+        </div>
+
+        <div class="form-group">
+          <label>â‘£ è‡ªå·±è³‡æœ¬æ¯”çŽ‡ï¼ˆ%ï¼‰<span class="max-pts">æœ€å¤§15pt</span></label>
+          <input type="number" id="f_er" placeholder="ä¾‹ï¼š62.0" step="0.1" min="0" max="100" />
+          <small>80%è¶… â—Žã€€60ã€œ80% â—‹ã€€40ã€œ60% â–³ã€€40%æœªæº€ Ã—</small>
+        </div>
+
+        <div class="form-group">
+          <label>â‘¤ å–¶æ¥­æ´»å‹•ã«ã‚ˆã‚‹CF<span class="max-pts">æœ€å¤§10pt</span></label>
+          <select id="f_cf">
+            <option value="">-- é¸æŠž --</option>
+            <option value="10">æ¯Žå¹´é»’å­—ï¼‹å¢—åŠ å‚¾å‘</option>
+            <option value="6">æ¯Žå¹´é»’å­—ï¼ˆæ¨ªã°ã„ï¼‰</option>
+            <option value="0">èµ¤å­—ã®å¹´ãŒã‚ã‚‹</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>â‘¥ ç¾é‡‘ç­‰ã®æŽ¨ç§»<span class="max-pts">æœ€å¤§10pt</span></label>
+          <select id="f_cash">
+            <option value="">-- é¸æŠž --</option>
+            <option value="10">å¢—åŠ å‚¾å‘</option>
+            <option value="5">æ¨ªã°ã„</option>
+            <option value="0">æ¸›å°‘å‚¾å‘</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>â‘¦ 1æ ªå½“ãŸã‚Šé…å½“é‡‘<span class="max-pts">æœ€å¤§15pt</span></label>
+          <select id="f_div">
+            <option value="">-- é¸æŠž --</option>
+            <option value="15">å®‰å®šï¼‹å¢—é…ç¶™ç¶šï¼ˆé€£ç¶šå¢—é…ï¼‰</option>
+            <option value="8">å®‰å®šï¼ˆæ¸›é…ãªã—ï¼‰</option>
+            <option value="0">æ¸›é…ãƒ»ç„¡é…ã®æ­´å²ã‚ã‚Š</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>â‘§ é…å½“æ€§å‘ï¼ˆ%ï¼‰<span class="max-pts">æœ€å¤§10pt</span></label>
+          <input type="number" id="f_pr" placeholder="ä¾‹ï¼š40.0" step="0.1" min="0" max="200" />
+          <small>30ã€œ50% â—Žï¼ˆå¥å…¨ï¼‰ã€€50ã€œ70% â—‹ã€€70%è¶… Ã—ï¼ˆè¦æ³¨æ„ï¼‰</small>
+        </div>
+
+        <div class="section-label">ðŸ“ ãƒ¡ãƒ¢</div>
+
+        <div class="form-group span-2">
+          <label>ãƒ¡ãƒ¢ï¼ˆå°†æ¥æ€§ãƒ»ç‰¹è¨˜äº‹é …ãƒ»æ¤œè¨Žç†ç”±ãªã©ï¼‰</label>
+          <textarea id="f_memo" placeholder="ä¾‹ï¼š19æœŸé€£ç¶šå¢—é…ã€‚5GæŠ•è³‡ã§æˆé•·æ€§ã‚ã‚Šã€‚é€šä¿¡ã‚¤ãƒ³ãƒ•ãƒ©ã§æ™¯æ°—è€æ€§â—Žã€‚"></textarea>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn btn-primary" id="addBtn" onclick="addOrUpdate()">ï¼‹ éŠ˜æŸ„ã‚’è¿½åŠ </button>
+          <button class="btn btn-secondary" onclick="clearForm()">ã‚¯ãƒªã‚¢</button>
+        </div>
+
+      </div>
+    </div><!-- /form card -->
+
+    <!-- Score Panel -->
+    <div class="card mb-22">
+      <div class="card-title">ðŸ† è©•ä¾¡ã‚¹ã‚³ã‚¢ï¼ˆãƒªã‚¢ãƒ«ã‚¿ã‚¤ãƒ ï¼‰</div>
+      <div class="score-panel" id="scorePanel">
+        <div class="empty-state">
+          <div class="empty-icon">ðŸ“Š</div>
+          <p>å„é …ç›®ã‚’å…¥åŠ›ã™ã‚‹ã¨<br>ã‚¹ã‚³ã‚¢ãŒãƒªã‚¢ãƒ«ã‚¿ã‚¤ãƒ ã§è¡¨ç¤ºã•ã‚Œã¾ã™</p>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /top-grid -->
+
+  <!-- Comparison Table -->
+  <div class="card mb-22">
+    <div class="card-title">
+      ðŸ“‹ éŠ˜æŸ„æ¯”è¼ƒãƒªã‚¹ãƒˆ
+      <span class="count-badge" id="stockCount">0</span>
+    </div>
+    <div id="stockList">
+      <div class="empty-state">
+        <div class="empty-icon">ðŸ“‹</div>
+        <p>ã¾ã éŠ˜æŸ„ãŒç™»éŒ²ã•ã‚Œã¦ã„ã¾ã›ã‚“<br>ä¸Šã®ãƒ•ã‚©ãƒ¼ãƒ ã‹ã‚‰éŠ˜æŸ„ã‚’è¿½åŠ ã—ã¦ãã ã•ã„</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bulk Screening -->
+  <div class="card mb-22">
+    <div class="card-title">ðŸ” ä¸€æ‹¬ã‚¹ã‚¯ãƒªãƒ¼ãƒ‹ãƒ³ã‚°</div>
+
+    <p style="font-size:0.85rem;color:#475569;margin-bottom:14px;line-height:1.65">
+      <strong>ãƒ¤ãƒ•ãƒ¼ãƒ•ã‚¡ã‚¤ãƒŠãƒ³ã‚¹ã®é…å½“åˆ©å›žã‚Šãƒ©ãƒ³ã‚­ãƒ³ã‚°</strong>ä¸Šä½éŠ˜æŸ„ã‚’IR BANKã§è‡ªå‹•ãƒã‚§ãƒƒã‚¯ã—ã€
+      <strong style="color:#15803d">KOé …ç›®ãªã—ãƒ»ã‚¹ã‚³ã‚¢60ç‚¹ä»¥ä¸Šãƒ»é…å½“åˆ©å›žã‚Š3.0%ä»¥ä¸Š</strong>ã®æŠ•è³‡é©æ ¼éŠ˜æŸ„ã®ã¿ã‚’ä¸€è¦§è¡¨ç¤ºã—ã¾ã™ã€‚
+      <br><span style="font-size:0.78rem;color:#94a3b8">â€» ä»¶æ•°ãŒå¤šã„ã»ã©æ™‚é–“ãŒã‹ã‹ã‚Šã¾ã™ï¼ˆ300éŠ˜æŸ„â‰’4åˆ†ã€1000éŠ˜æŸ„â‰’15åˆ†ã€2000éŠ˜æŸ„â‰’30åˆ†ï¼‰</span>
+    </p>
+
+    <!-- ä»¶æ•°é¸æŠž -->
+    <div style="margin-bottom:14px">
+      <div style="font-size:0.8rem;font-weight:700;color:#64748b;margin-bottom:8px">ðŸ“Š ã‚¹ã‚¯ãƒªãƒ¼ãƒ‹ãƒ³à‚°ä»¶æ•°ã‚’é¸æŠžï¼š</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap" id="countBtnGroup">
+        <button class="count-btn count-btn-active" data-count="300" onclick="selectCount(this)">300éŠ˜æŸ„<span style="font-size:0.7rem;display:block;opacity:0.75">ç´„4åˆ†</span></button>
+        <button class="count-btn" data-count="500" onclick="selectCount(this)">500éŠ˜æŸ„<span style="font-size:0.7rem;display:block;opacity:0.75">ç´„7åˆ†</span></button>
+        <button class="count-btn" data-count="1000" onclick="selectCount(this)">1000éŠ˜æŸ„<span style="font-size:0.7rem;display:block;opacity:0.75">ç´„15åˆ†</span></button>
+        <button class="count-btn" data-count="1500" onclick="selectCount(this)">1500éŠ˜æŸ„<span style="font-size:0.7rem;display:block;opacity:0.75">ç´„22åˆ†</span></button>
+        <button class="count-btn" data-count="2000" onclick="selectCount(this)">2000éŠ˜æŸ„<span style="font-size:0.7rem;display:block;opacity:0.75">ç´„30åˆ†</span></button>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+      <button class="btn-bulk" id="bulkBtn" onclick="startBulkScreen()">ðŸ” ä¸€æ‹¬ã‚¹ã‚¯ãƒªãƒ¼ãƒ‹ãƒ³à‚°é–‹å§‹</button>
+      <button id="bulkStopBtn" onclick="stopBulkScreen()" style="display:none;padding:10px 18px;background:#fff1f2;border:1px solid #fca5a5;border-radius:10px;font-size:0.88rem;font-weight:700;color:#dc2626;cursor:pointer">â¹ ä¸­æ–­</button>
+    </div>
+
+    <!-- Progress -->
+    <div id="bulkProgress" style="display:none;margin-top:18px">
+      <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.83rem;margin-bottom:4px">
+        <span id="bulkStatusText" style="font-weight:600;color:#4f46e5">æº–å‚™ä¸­...</span>
+        <span id="bulkCountText" style="color:#64748b">0 / 0</span>
+      </div>
+      <div class="bulk-progress-bar">
+        <div class="bulk-progress-fill" id="bulkBar"></div>
+      </div>
+      <div style="font-size:0.76rem;color:#94a3b8;margin-top:4px" id="bulkCurrentStock"></div>
+    </div>
+
+    <!-- Results -->
+    <div id="bulkResults" style="display:none;margin-top:22px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+        <div style="font-size:0.95rem;font-weight:800;color:#0f172a">
+          âœ… æŠ•è³‡é©æ ¼å€™è£œï¼š<span id="qualifiedCount" style="color:#15803d;font-size:1.1rem">0</span> éŠ˜æŸ„
+          <span style="font-size:0.76rem;font-weight:400;color:#64748b">ï¼ˆKOãªã—ãƒ»60ç‚¹ä»¥ä¸Šãƒ»åˆ©å›žã‚Š3.0%ä»¥ä¸Šï¼‰</span>
+        </div>
+        <button onclick="addAllQualified()"
+          style="padding:7px 14px;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;font-size:0.8rem;color:#15803d;cursor:pointer;font-weight:700">
+          ï¼‹ å…¨ä»¶ã‚’æ¯”è¼ƒãƒªã‚¹ãƒˆã«è¿½åŠ 
+        </button>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="bulk-result-table" id="bulkTable">
+          <thead>
+            <tr>
+              <th>é †ä½</th><th>éŠ˜æŸ„</th><th style="text-align:center">ã‚¹ã‚³ã‚¢</th>
+              <th style="text-align:center">åˆ©å›žã‚Š</th><th style="text-align:center">å–¶æ¥­åˆ©ç›ŠçŽ‡</th>
+              <th style="text-align:center">è‡ªå·±è³‡æœ¬æ¯”çŽ‡</th><th style="text-align:center">é…å½“æ€§å‘</th>
+              <th style="text-align:center">å£²ä¸Š</th><th style="text-align:center">EPS</th>
+              <th style="text-align:center">æ“ä½œ</th>
+            </tr>
+          </thead>
+          <tbody id="bulkTbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tips -->
+  <div class="card">
+    <div class="card-title">ðŸ’¡ ãƒªãƒ™å¤§æµ é«˜é…å½“æ ªæŠ•è³‡ã®å¤§å‰æ5é¸</div>
+    <div class="tips-grid">
+      <div class="tip-item" style="background:#eff6ff">
+        <strong style="color:#1d4ed8">â‘  é«˜ã‚¯ã‚ªãƒªãƒ†ã‚£ã‚’é¸ã¶</strong><br>
+        é…å½“åˆ©å›žã‚Šã ã‘ã§é¸ã°ãªã„ã€‚åŽç›Šæ€§ãƒ»å®‰å®šæ€§ãƒ»å®‰å…¨æ€§ãƒ»æˆé•·æ€§ã‚’ãƒˆãƒ¼ã‚¿ãƒ«ã§åˆ¤æ–­ã™ã‚‹ã€‚
+      </div>
+      <div class="tip-item" style="background:#f0fdf4">
+        <strong style="color:#15803d">â‘¡ åˆ†æ•£ãƒ»åˆ†æ•£ãƒ»ã¨ã«ã‹ãåˆ†æ•£</strong><br>
+        æœ€ä½Ž30ã€œ50éŠ˜æŸ„ã€ç†æƒ³ã¯70ã€œ80éŠ˜æŸ„ã€‚1ã‚»ã‚¯ã‚¿ãƒ¼ã®é…å½“æ¯”çŽ‡ã¯10%ä»¥å†…ã«ã€‚
+      </div>
+      <div class="tip-item" style="background:#fffbeb">
+        <strong style="color:#92400e">â‘¢ ãƒãƒ¼ãƒˆãƒ•ã‚©ãƒªã‚ªå…¨ä½“ã§è©•ä¾¡</strong><br>
+        å€‹åˆ¥éŠ˜æŸ„ã®æç›Šã«ä¸€å–œä¸€æ†‚ã—ãªã„ã€‚å…¨ä½“ã®é…å½“é‡‘ã¨æ ªä¾¡ã§åˆ¤æ–­ã™ã‚‹ã€‚
+      </div>
+      <div class="tip-item" style="background:#fdf4ff">
+        <strong style="color:#7e22ce">â‘£ é•·æœŸã§è€ƒãˆã‚‹</strong><br>
+        æœ€ä½Ž5ã€œ10å¹´ã®ç›®ç·šã§ã€‚ãƒˆãƒ¼ã‚¿ãƒ«ãƒªã‚¿ãƒ¼ãƒ³ï¼ˆé…å½“ï¼‹å€¤ä¸ŠãŒã‚Šï¼‰å¹´5ã€œ7%ã‚’ç›®æ¨™ã«ã€‚
+      </div>
+      <div class="tip-item" style="background:#fff1f2">
+        <strong style="color:#be123c">â‘¤ é…å½“é‡‘ã¯ä½¿ã†</strong><br>
+        å†æŠ•è³‡ãªã‚‰ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ã®æ–¹ãŒåŠ¹çŽ‡çš„ã€‚é«˜é…å½“æ ªã®æžœå®Ÿã¯ã€Œä»Šã®ç”Ÿæ´»ã€ã‚’è±Šã‹ã«ã™ã‚‹ãŸã‚ã«ã€‚
+      </div>
+    </div>
+    <div style="margin-top:14px;padding:11px 14px;background:#f8fafc;border-radius:8px;font-size:0.78rem;color:#64748b;line-height:1.6">
+      âš ï¸ <strong>å…è²¬äº‹é …</strong>ï¼šã“ã®ãƒ„ãƒ¼ãƒ«ã¯ãƒªãƒ™ãƒ©ãƒ«ã‚¢ãƒ¼ãƒ„å¤§å­¦ã®è¨˜äº‹ã‚’å‚è€ƒã«ã—ãŸå­¦ç¿’ãƒ»å‚è€ƒç”¨ãƒ„ãƒ¼ãƒ«ã§ã™ã€‚æŠ•è³‡åˆ¤æ–­ã®æœ€çµ‚è²¬ä»»ã¯ã”è‡ªèº«ã«ã‚ã‚Šã¾ã™ã€‚æŠ•è³‡ã¯å¿…ãšã”è‡ªèº«ã§ååˆ†ã«èª¿æŸ»ãƒ»æ¤œè¨Žã®ä¸Šã§ã”åˆ¤æ–­ãã ã•ã„ã€‚
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<script>
+  // ============================
+  //  Stock lookup map (éŠ˜æŸ„å â†” è¨¼åˆ¸ã‚³ãƒ¼ãƒ‰)
+  // ============================
+  const STOCKS_LIST = [
+    ['8058','ä¸‰è±å•†äº‹'],['8031','ä¸‰äº•ç‰©ç”£'],['8053','ä½å‹å•†äº‹'],
+    ['8001','ä¼Šè—¤å¿ å•†äº‹'],['8002','ä¸¸ç´…'],['8015','è±Šç”°é€šå•†'],
+    ['2768','åŒæ—¥'],['8088','å²©è°·ç”£æ¥­'],['8081','ã‚«ãƒŠãƒ‡ãƒ³'],
+    ['5432','NTT'],['5433','KDDI'],['9434','ã‚½ãƒ•ãƒˆãƒãƒ³ã‚¯'],
+    ['8316','ä¸‰äº•ä½å‹FG'],['8306','ä¸‰è±UFJ FG'],['8411','ã¿ãšã»FG'],
+    ['7182','ã‚†ã†ã¡ã‚‡éŠ€è¡Œ'],['8354','ãµã“ãŠã‹FG'],['8473','SBI HD'],
+    ['8253','ã‚¯ãƒ¬ãƒ‡ã‚£ã‚»ã‚¾ãƒ³'],['8309','ä¸‰äº•ä½å‹ãƒˆãƒ©ã‚¹ãƒˆHD'],
+    ['7186','ã‚³ãƒ³ã‚³ãƒ«ãƒ‡ã‚£ã‚¢FG'],['8327','å±±å£FG'],
+    ['7181','ã‹ã‚“ã½ç”Ÿå‘½'],['8308','ã‚ŠããªHD'],
+    ['8725','MS&ADã‚¤ãƒ³ã‚·ãƒ¥ã‚¢ãƒ©ãƒ³ã‚¹G'],['8766','æ±äº¬æµ·ä¸ŠHD'],
+    ['8750','ç¬¬ä¸€ç”Ÿå‘½HD'],['8630','SOMPOãƒ›ãƒ¼ãƒ«ãƒ‡ã‚£ãƒ³ã‚°ã‚¹'],
+    ['8601','å¤§å’Œè¨¼åˆ¸Gæœ¬ç¤¾'],['8604','é‡Žæ‘HD'],['8628','æ¾äº•è¨¼åˆ¸'],
+    ['8698','ãƒžãƒãƒƒã‚¯ã‚¹G'],['7164','å…¨å›½ä¿è¨¼'],
+    ['1605','INPEX'],['5019','å‡ºå…‰èˆˆç”£'],['5020','ENEOSãƒ›ãƒ¼ãƒ«ãƒ‡ã‚£ãƒ³ã‚°ã‚¹'],
+    ['5401','æ—¥æœ¬è£½é‰„'],['5411','JFEãƒ›ãƒ¼ãƒ«ãƒ‡ã‚£ãƒ³ã‚°ã‚¹'],
+    ['5713','ä½å‹é‡‘å±žé‰±å±±'],['3436','SUMCO'],
+    ['4063','ä¿¡è¶ŠåŒ–å­¦å·¥æ¥­'],['4005','ä½å‹åŒ–å­¦'],['4188','ä¸‰è±ã‚±ãƒŸã‚«ãƒ«G'],
+    ['4183','ä¸‰äº•åŒ–å­¦'],['4021','æ—¥ç”£åŒ–å­¦'],['3407','æ—­åŒ–æˆ'],
+    ['4612','æ—¥æœ¬ãƒšã‚¤ãƒ³ãƒˆHD'],
+    ['3861','çŽ‹å­HD'],['3863','æ—¥æœ¬è£½ç´™'],['3105','æ—¥æ¸…ç´¡HD'],
+    ['5101','æ—¥æœ¬éƒµèˆ¹'],['5104','å•†èˆ¹ä¸‰äº•'],['5107','å·å´Žæ±½èˆ¹'],
+    ['9064','ãƒ¤ãƒžãƒˆHD'],['9062','æ—¥æœ¬é€šé‹'],['9006','äº¬æ€¥é›»é‰„'],
+    ['9501','æ±äº¬é›»åŠ›HD'],['9502','ä¸­éƒ¨é›»åŠ›'],['9503','é–¢è¥¿é›»åŠ›'],
+    ['9531','æ±äº¬ã‚¬ã‚¹'],['9532','å¤§é˜ªã‚¬ã‚¹'],
+    ['2914','JT'],['2502','ã‚¢ã‚µãƒ’GHD'],['2503','ã‚­ãƒªãƒ³HD'],
+    ['2282','æ—¥æœ¬ãƒãƒ '],['2269','æ˜Žæ²»HD'],['2801','ã‚­ãƒƒã‚³ãƒ¼ãƒžãƒ³'],
+    ['2587','ã‚µãƒ³ãƒˆãƒªãƒ¼BF'],['1332','ãƒ‹ãƒƒã‚¹ã‚¤'],['1301','æ¥µæ´‹'],
+    ['4502','æ­¦ç”°è–¬å“å·¥æ¥­'],['4519','ä¸­å¤–è£½è–¬'],['4568','ç¬¬ä¸€ä¸‰å…±'],
+    ['4523','ã‚¨ãƒ¼ã‚¶ã‚¤'],['4507','å¡©é‡Žç¾©è£½è–¬'],['4543','ãƒ†ãƒ«ãƒ¢'],
+    ['7203','ãƒˆãƒ¨ã‚¿è‡ªå‹•è»Š'],['7267','æœ¬ç”°æŠ€ç ”å·¥æ¥­'],['7270','SUBARU'],
+    ['7269','ã‚¹ã‚ºã‚­'],['7272','ãƒ¤ãƒžãƒç™ºå‹•æ©Ÿ'],['6902','DENSO'],
+    ['7202','ã„ã™ã‚žè‡ªå‹•è»Š'],['7201','æ—¥ç”£è‡ªå‹•è»Š'],['7012','å·å´Žé‡å·¥æ¥­'],
+    ['6501','æ—¥ç«‹è£½ä½œæ‰€'],['6503','ä¸‰è±é›»æ©Ÿ'],['6752','ãƒ‘ãƒŠã‚½ãƒ‹ãƒƒã‚¯HD'],
+    ['6301','ã‚³ãƒžãƒ„'],['6326','ã‚¯ãƒœã‚¿'],['7011','ä¸‰è±é‡å·¥æ¥­'],
+    ['7751','ã‚­ãƒ¤ãƒŽãƒ³'],['6724','ã‚»ã‚¤ã‚³ãƒ¼ã‚¨ãƒ—ã‚½ãƒ³'],['6702','å¯Œå£«é€š'],
+    ['6723','ãƒ«ãƒã‚µã‚¹ã‚¨ãƒ¬ã‚¯ãƒˆãƒ­ãƒ‹ã‚¯ã‚¹'],['6857','ã‚¢ãƒ‰ãƒãƒ³ãƒ†ã‚¹ãƒˆ'],
+    ['6981','æ‘ç”°è£½ä½œæ‰€'],['4901','å¯Œå£«ãƒ•ã‚¤ãƒ«ãƒ HD'],
+    ['4307','é‡Žæ‘ç·åˆç ”ç©¶æ‰€'],
+    ['8802','ä¸‰è±åœ°æ‰€'],['8804','æ±æ€¥ä¸å‹•ç”£HD'],['8830','ä½å‹ä¸å‹•ç”£'],
+    ['8801','ä¸‰äº•ä¸å‹•ç”£'],['1928','ç©æ°´ãƒã‚¦ã‚¹'],['1925','å¤§å’Œãƒã‚¦ã‚¹å·¥æ¥­'],
+    ['3003','ãƒ’ãƒ¥ãƒ¼ãƒªãƒƒã‚¯'],['1802','å¤§æž—çµ„'],['1803','æ¸…æ°´å»ºè¨­'],
+    ['1801','å¤§æˆå»ºè¨­'],['1812','é¹¿å³¶å»ºè¨­'],
+    ['8267','ã‚¤ã‚ªãƒ³'],['3382','ã‚»ãƒ–ãƒ³&ã‚¢ã‚¤HD'],['2651','ãƒ­ãƒ¼ã‚½ãƒ³'],
+    ['3099','ä¸‰è¶Šä¼Šå‹¢ä¸¹HD'],['9843','ãƒ‹ãƒˆãƒªHD'],
+    ['4452','èŠ±çŽ‹'],['4911','è³‡ç”Ÿå ‚'],['5802','ä½å‹é›»æ°—å·¥æ¥­'],
+    ['6703','OKI'],['8096','å…¼æ¾ã‚¨ãƒ¬ã‚¯ãƒˆãƒ­ãƒ‹ã‚¯ã‚¹'],
+    ['9202','ANAãƒ›ãƒ¼ãƒ«ãƒ‡ã‚£ãƒ³ã‚°ã‚¹'],['9201','æ—¥æœ¬èˆªç©º'],
+    ['6098','ãƒªã‚¯ãƒ«ãƒ¼ãƒˆHD'],['9984','ã‚½ãƒ•ãƒˆãƒãƒ³ã‚¯G'],
+    ['8252','ä¸¸äº•G'],['5943','ãƒŽãƒ¼ãƒªãƒ„'],['7014','åæ‘é€ èˆ¹æ‰€'],
+    ['8075','ç¥žé‹¼å•†äº‹'],['5901','æ±æ´‹è£½ç½GHD'],
+    ['9783','ãƒ™ãƒãƒƒã‚»HD'],['4816','æ±æ˜ ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³'],
+  ];
+  // ã‚³ãƒ¼ãƒ‰â†’åå‰ã€åå‰â†’ã‚³ãƒ¼ãƒ‰ã®é€†å¼•ããƒžãƒƒãƒ—
+  const CODE_TO_NAME = {};
+  const NAME_TO_CODE = {};
+  STOCKS_LIST.forEach(([code, name]) => {
+    if (!CODE_TO_NAME[code]) CODE_TO_NAME[code] = name;
+    if (!NAME_TO_CODE[name]) NAME_TO_CODE[name] = code;
+  });
+
+  // ã‚ªãƒ¼ãƒˆã‚³ãƒ³ãƒ—ãƒªãƒ¼ãƒˆå…±é€šé–¢æ•°
+  function renderAcDropdown(dropdownEl, items, onSelect) {
+    dropdownEl.innerHTML = '';
+    if (!items.length) { dropdownEl.classList.remove('open'); return; }
+    items.forEach(([code, name], i) => {
+      const div = document.createElement('div');
+      div.className = 'ac-item' + (i === 0 ? ' ac-active' : '');
+      div.innerHTML = `<span class="ac-item-name">${name}</span><span class="ac-item-code">${code}</span>`;
+      div.onmousedown = (e) => { e.preventDefault(); onSelect(code, name); dropdownEl.classList.remove('open'); };
+      dropdownEl.appendChild(div);
+    });
+    dropdownEl.classList.add('open');
+  }
+  function closeAcDropdowns() {
+    document.getElementById('nameDropdown').classList.remove('open');
+    document.getElementById('codeDropdown').classList.remove('open');
+  }
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.ac-wrap')) closeAcDropdowns();
+  });
+
+  // éŠ˜æŸ„åãƒ•ã‚£ãƒ¼ãƒ«ãƒ‰ â€” åå‰ã§å‰æ–¹ä¸€è‡´ + éƒ¨åˆ†ä¸€è‡´
+  document.addEventListener('DOMContentLoaded', () => {
+    const nameInput = document.getElementById('f_name');
+    const codeInput = document.getElementById('f_code');
+    const nameDD = document.getElementById('nameDropdown');
+    const codeDD = document.getElementById('codeDropdown');
+
+    nameInput.addEventListener('input', function() {
+      const q = this.value.trim();
+      if (!q) { nameDD.classList.remove('open'); return; }
+      const lower = q.toLowerCase();
+      // å‰æ–¹ä¸€è‡´ã‚’å„ªå…ˆã€æ¬¡ã«éƒ¨åˆ†ä¸€è‡´
+      const exact   = STOCKS_LIST.filter(([c,n]) => n.startsWith(q));
+      const partial = STOCKS_LIST.filter(([c,n]) => !n.startsWith(q) && n.includes(q));
+      const matches = [...exact, ...partial].slice(0, 10);
+      renderAcDropdown(nameDD, matches, (code, name) => {
+        nameInput.value = name;
+        codeInput.value = code;
+      });
+    });
+    nameInput.addEventListener('blur', () => setTimeout(() => nameDD.classList.remove('open'), 160));
+
+    // è¨¼åˆ¸ã‚³ãƒ¼ãƒ‰ãƒ•ã‚£ãƒ¼ãƒ«ãƒ‰ â€” æ•°å­—4æ¡ã§å³ç¢ºå®šã€é€”ä¸­å…¥åŠ›ã§ãƒ‰ãƒ­ãƒƒãƒ—ãƒ€ã‚¦ãƒ³
+    codeInput.addEventListener('input', function() {
+      const q = this.value.trim();
+      if (!q) { codeDD.classList.remove('open'); return; }
+      // 4æ¡å®Œå…¨ä¸€è‡´ â†’ å³åº§ã«éŠ˜æŸ„åã‚’è£œå®Œ
+      if (/^\d{4}$/.test(q) && CODE_TO_NAME[q]) {
+        nameInput.value = CODE_TO_NAME[q];
+        codeDD.classList.remove('open');
+        return;
+      }
+      // é€”ä¸­å…¥åŠ› â†’ å‰æ–¹ä¸€è‡´å€™è£œã‚’è¡¨ç¤º
+      const matches = STOCKS_LIST.filter(([c]) => c.startsWith(q)).slice(0, 10);
+      renderAcDropdown(codeDD, matches, (code, name) => {
+        codeInput.value = code;
+        nameInput.value = name;
+      });
+    });
+    codeInput.addEventListener('blur', () => setTimeout(() => codeDD.classList.remove('open'), 160));
+  });
+
+  // ============================
+  //  Data store
+  // ============================
+  const stocks = [];
+  let editingIdx = -1;
+
+  // ==================================================
+  //  ä¸€æ‹¬ã‚¹ã‚¯ãƒªãƒ¼ãƒ‹ãƒ³ã‚°
+  // ==================================================
+  let bulkRunning   = false;
+  let qualifiedList = [];   // æŠ•è³‡é©æ ¼éŠ˜æŸ„
+  let sortedBulk    = [];   // ãƒ†ãƒ¼ãƒ–ãƒ«è¡¨ç¤ºé †ï¼ˆã‚¹ã‚³ã‚¢é™é †ï¼‰
+  let selectedCount = 300;  // ã‚¹ã‚¯ãƒªãƒ¼ãƒ‹ãƒ³ã‚°ä»¶æ•°
+
+  function selectCount(btn) {
+    if (bulkRunning) return;
+    selectedCount = parseInt(btn.dataset.count);
+    document.querySelectorAll('.count-btn').forEach(b => b.classList.remove('count-btn-active'));
+    btn.classList.add('count-btn-active');
+  }
+
+  const BULK_TREND_SALES = { up: '10', flat: '5', down: '0', unknown: '' };
+  const BULK_TREND_EPS   = { up: '15', flat: '7', down: '0', unknown: '' };
+  const BULK_TREND_CASH  = { up: '10', flat: '5', down: '0', unknown: '' };
+  const BULK_CF          = { up_positive: '10', positive: '6', has_negative: '0', unknown: '' };
+  const BULK_DIV         = { stable_growing: '15', stable: '8', has_cut: '0', unknown: '' };
+
+  function apiToForm(d) {
+    return {
+      name:   d.name  || '',
+      code:   d.code  || '',
+      yield_: d.dividend_yield  != null ? String(d.dividend_yield)  : '',
+      sector: '',
+      sales:  BULK_TREND_SALES[d.sales_trend]   || '',
+      eps:    BULK_TREND_EPS[d.eps_trend]        || '',
+      om:     d.operating_margin != null ? String(d.operating_margin) : '',
+      er:     d.equity_ratio     != null ? String(d.equity_ratio)     : '',
+      cf:     BULK_CF[d.operating_cf]            || '',
+      cash:   BULK_TREND_CASH[d.cash_trend]      || '',
+      div:    BULK_DIV[d.dividend_trend]         || '',
+      pr:     d.payout_ratio     != null ? String(d.payout_ratio)     : '',
+      memo:   ''
+    };
+  }
+
+  async function startBulkScreen() {
+    if (bulkRunning) return;
+    bulkRunning   = true;
+    qualifiedList = [];
+    sortedBulk    = [];
+
+    const btn     = document.getElementById('bulkBtn');
+    const stopBtn = document.getElementById('bulkStopBtn');
+    btn.disabled  = true;
+    // ä»¶æ•°é¸æŠžãƒœã‚¿ãƒ³ã‚’ç„¡åŠ¹åŒ–
+    document.querySelectorAll('.count-btn').forEach(b => b.disabled = true);
+    stopBtn.style.display = 'inline-block';
+    document.getElementById('bulkProgress').style.display = 'block';
+    document.getElementById('bulkResults').style.display  = 'none';
+    document.getElementById('bulkBar').style.width        = '0%';
+    document.getElementById('bulkTbody').innerHTML        = '';
+    document.getElementById('qualifiedCount').textContent = '0';
+    document.getElementById('bulkStatusText').textContent = 'ãƒ©ãƒ³ã‚­ãƒ³ã‚°ã‚’å–å¾—ä¸­...';
+    document.getElementById('bulkCountText').textContent  = 'â€” / â€”';
+
+    try {
+      // Step 1: ãƒ¤ãƒ•ãƒ¼ãƒ•ã‚¡ã‚¤ãƒŠãƒ³ã‚¹ã‹ã‚‰ãƒ©ãƒ³ã‚­ãƒ³ã‚°å–å¾—
+      document.getElementById('bulkStatusText').textContent = `ãƒ¤ãƒ•ãƒ¼ãƒ•ã‚¡ã‚¤ãƒŠãƒ³ã‚¹ã‹ã‚‰ãƒ©ãƒ³ã‚­ãƒ³ã‚°ãƒ‡ãƒ¼ã‚¿ã‚’å–å¾—ä¸­...ï¼ˆä¸Šä½${selectedCount}éŠ˜æŸ„ï¼‰`;
+      const rankResp = await fetch(`${API_BASE}/api/yahoo_ranking?count=${selectedCount}`);
+      if (!rankResp.ok) throw new Error('ãƒ©ãƒ³ã‚­ãƒ³ã‚°å–å¾—ã«å¤±æ•—ã—ã¾ã—ãŸ');
+      const rankData = await rankResp.json();
+      if (!rankData.success) throw new Error(rankData.error || 'ãƒ©ãƒ³ã‚­ãƒ³ã‚°å–å¾—å¤±æ•—');
+
+      const targetList = rankData.stocks;
+      const total      = targetList.length;
+      let   checked    = 0;
+
+      document.getElementById('bulkStatusText').textContent = 'IR BANKã§å„éŠ˜æŸ„ã‚’ãƒã‚§ãƒƒã‚¯ä¸­...';
+      document.getElementById('bulkCountText').textContent  = `0 / ${total}`;
+
+      // Step 2: 1éŠ˜æŸ„ãšã¤ãƒã‚§ãƒƒã‚¯
+      for (const stock of targetList) {
+        if (!bulkRunning) break;
+
+        document.getElementById('bulkCurrentStock').textContent =
+          `ç¢ºèªä¸­: ${stock.code}  ${stock.name}`;
+
+        try {
+          const resp = await fetch(`${API_BASE}/api/stock/${stock.code}`);
+          if (resp.ok) {
+            const data = await resp.json();
+            if (data.success) {
+              const form   = apiToForm(data.data);
+              const result = calcScore(form);
+              const yieldOk = !form.yield_ || parseFloat(form.yield_) >= 3.0;
+              if (result.kos.length === 0 && result.total >= 60 && yieldOk) {
+                qualifiedList.push({ ...form, result });
+                renderBulkTable();
+              }
+            }
+          }
+        } catch (e) { /* ã‚¹ã‚­ãƒƒãƒ— */ }
+
+        checked++;
+        const pct = Math.round((checked / total) * 100);
+        document.getElementById('bulkBar').style.width        = pct + '%';
+        document.getElementById('bulkCountText').textContent  = `${checked} / ${total}`;
+        document.getElementById('bulkStatusText').textContent = `ãƒã‚§ãƒƒã‚¯ä¸­â€¦ (é©æ ¼: ${qualifiedList.length}éŠ˜æŸ„)`;
+
+        await new Promise(r => setTimeout(r, 800));
+      }
+
+      const fin = bulkRunning ? `âœ… å®Œäº†ï¼ ${checked}éŠ˜æŸ„ãƒã‚§ãƒƒã‚¯ â†’ ` : `â¹ ä¸­æ–­ (${checked}éŠ˜æŸ„ãƒã‚§ãƒƒã‚¯æ¸ˆ) â†’ `;
+      document.getElementById('bulkStatusText').textContent = fin + `é©æ ¼ ${qualifiedList.length}éŠ˜æŸ„`;
+      document.getElementById('bulkCurrentStock').textContent = '';
+
+    } catch (err) {
+      document.getElementById('bulkStatusText').textContent = `âŒ ã‚¨ãƒ©ãƒ¼: ${err.message}`;
+    } finally {
+      bulkRunning = false;
+      btn.disabled = false;
+      document.querySelectorAll('.count-btn').forEach(b => b.disabled = false);
+      stopBtn.style.display = 'none';
+    }
+  }
+
+  function stopBulkScreen() {
+    bulkRunning = false;
+  }
+
+  function renderBulkTable() {
+    sortedBulk = [...qualifiedList].sort((a, b) => b.result.total - a.result.total);
+    document.getElementById('bulkResults').style.display  = 'block';
+    document.getElementById('qualifiedCount').textContent = sortedBulk.length;
+
+    const salesLbl = {'10':'â†—ä¸Šæ˜‡', '5':'â†’æ¨ªã°ã„', '0':'â†˜ä¸‹è½', '':'â€”'};
+    const epsLbl   = {'15':'â†—ä¸Šæ˜‡', '7':'â†’æ¨ªã°ã„', '0':'â†˜ä¸‹è½', '':'â€”'};
+    const alreadyAdded = code => !!stocks.find(s => s.code === code);
+
+    const rows = sortedBulk.map((s, idx) => {
+      const sc    = s.result.total;
+      const color = sc >= 80 ? '#15803d' : '#1d4ed8';
+      const added = alreadyAdded(s.code);
+      return `<tr>
+        <td style="text-align:center;font-weight:700">${idx + 1}</td>
+        <td>
+          <div style="font-weight:700">${s.name}</div>
+          <div style="font-size:0.73rem;color:#64748b">${s.code}</div>
+        </td>
+        <td style="text-align:center">
+          <span style="font-size:1.15rem;font-weight:900;color:${color}">${sc}</span>
+          <span style="font-size:0.68rem;color:#94a3b8">/100</span>
+        </td>
+        <td style="text-align:center">${s.yield_ ? s.yield_ + '%' : 'â€”'}</td>
+        <td style="text-align:center">${s.om ? s.om + '%' : 'â€”'}</td>
+        <td style="text-align:center">${s.er ? s.er + '%' : 'â€”'}</td>
+        <td style="text-align:center">${s.pr ? s.pr + '%' : 'â€”'}</td>
+        <td style="text-align:center;font-size:0.78rem">${salesLbl[s.sales] ?? 'â€”'}</td>
+        <td style="text-align:center;font-size:0.78rem">${epsLbl[s.eps]     ?? 'â€”'}</td>
+        <td style="text-align:center">
+          <button class="btn-add-stock ${added ? 'added' : ''}" id="addBtn_${s.code}"
+            onclick="addBulkStock(${idx})" ${added ? 'disabled' : ''}>
+            ${added ? 'âœ… è½éå‰ æ¸ˆ' : 'ï¼‹ è½éå‰('}
+          </button>
+        </td>
+      </tr>`;
+    }).join('');
+
+    document.getElementById('bulkTbody').innerHTML = rows;
+  }
+
+  function addBulkStock(idx) {
+    const s = sortedBulk[idx];
+    if (!s) return;
+    if (stocks.find(e => e.code === s.code)) {
+      alert(`${s.name} ã¯ã™ã§ã«æ¯”è¼ƒãƒªã‚¹ãƒˆã«ã‚ã‚Šã¾ã™`);
+      return;
+    }
+    stocks.push(s);
+    renderList();
+    // ãƒœã‚¿ãƒ³ã‚’è¿½åŠ æ¸ˆã¿ã«å¤‰æ›´
+    const btn = document.getElementById(`addBtn_${s.code}`);
+    if (btn) { btn.textContent = 'âœ… è¿½åŠ æ¸ˆ'; btn.disabled = true; btn.classList.add('added'); }
+  }
+
+  function addAllQualified() {
+    let added = 0;
+    for (const s of qualifiedList) {
+      if (!stocks.find(e => e.code === s.code)) {
+        stocks.push(s);
+        added++;
+      }
+    }
+    renderList();
+    renderBulkTable(); // ãƒœã‚¿ãƒ³çŠ¶æ…‹ã‚’æ›´æ–°
+    alert(`âœ… ${added}éŠ˜æŸ„ã‚’æ¯”è¼ƒãƒªã‚¹ãƒˆã«è¿½åŠ ã—ã¾ã—ãŸ`);
+  }
+
+  // ============================
+  //  Scoring engine
+  // ============================
+  function calcScore(d) {
+    const items = [];
+
+    // â‘  å£²ä¸Šé«˜
+    const v1 = d.sales;
+    const p1 = v1 !== '' ? parseInt(v1) : null;
+    items.push({
+      name: 'â‘  å£²ä¸Šé«˜',
+      score: p1 ?? 0,
+      max: 10,
+      status: p1 === null ? 'empty' : p1 === 10 ? 'pass' : p1 === 5 ? 'caution' : 'fail',
+      label: p1 === null ? 'æœªå…¥åŠ›' : p1 === 10 ? 'å³è‚©ä¸ŠãŒã‚Š' : p1 === 5 ? 'æ¨ªã°ã„' : 'ä¸‹è½å‚¾å‘',
+      isKO: v1 === '0'
+    });
+
+    // â‘¡ EPS
+    const v2 = d.eps;
+    const p2 = v2 !== '' ? parseInt(v2) : null;
+    items.push({
+      name: 'â‘¡ EPS',
+      score: p2 ?? 0,
+      max: 15,
+      status: p2 === null ? 'empty' : p2 === 15 ? 'pass' : p2 === 7 ? 'caution' : 'fail',
+      label: p2 === null ? 'æœªå…¥åŠ›' : p2 === 15 ? 'å³è‚©ä¸ŠãŒã‚Š' : p2 === 7 ? 'æ¨ªã°ã„' : 'ä¸‹è½å‚¾å‘',
+      isKO: v2 === '0'
+    });
+
+    // â‘¢ å–¶æ¥­åˆ©ç›ŠçŽ‡
+    const om = parseFloat(d.om);
+    let p3 = 0, l3 = 'æœªå…¥åŠ›', s3 = 'empty';
+    if (!isNaN(om)) {
+      if (om >= 10)      { p3 = 15; l3 = `${om}%ï¼ˆâ—Žå„ªç§€ï¼‰`;  s3 = 'pass'; }
+      else if (om >= 7)  { p3 = 10; l3 = `${om}%ï¼ˆâ—‹è‰¯å¥½ï¼‰`;  s3 = 'pass'; }
+      else if (om >= 5)  { p3 = 5;  l3 = `${om}%ï¼ˆâ–³æ³¨æ„ï¼‰`;  s3 = 'caution'; }
+      else               { p3 = 0;  l3 = `${om}%ï¼ˆÃ—ä¸å¯ï¼‰`;  s3 = 'fail'; }
+    }
+    items.push({ name: 'â‘¢ å–¶æ¥­åˆ©ç›ŠçŽ‡', score: p3, max: 15, status: s3, label: l3, isKO: !isNaN(om) && om < 5 });
+
+    // â‘£ è‡ªå·±è³‡æœ¬æ¯”çŽ‡
+    const er = parseFloat(d.er);
+    let p4 = 0, l4 = 'æœªå…¥åŠ›', s4 = 'empty';
+    if (!isNaN(er)) {
+      if (er >= 80)      { p4 = 15; l4 = `${er}%ï¼ˆâ—Žæœ€é«˜ï¼‰`;  s4 = 'pass'; }
+      else if (er >= 60) { p4 = 12; l4 = `${er}%ï¼ˆâ—‹å®‰å¿ƒï¼‰`;  s4 = 'pass'; }
+      else if (er >= 40) { p4 = 8;  l4 = `${er}%ï¼ˆâ–³OKï¼‰`;    s4 = 'caution'; }
+      else               { p4 = 0;  l4 = `${er}%ï¼ˆÃ—å±é™ºï¼‰`;  s4 = 'fail'; }
+    }
+    items.push({ name: 'â‘£ è‡ªå·±è³‡æœ¬æ¯”çŽ‡', score: p4, max: 15, status: s4, label: l4, isKO: !isNaN(er) && er < 40 });
+
+    // â‘¤ å–¶æ¥­CF
+    const v5 = d.cf;
+    const p5 = v5 !== '' ? parseInt(v5) : null;
+    items.push({
+      name: 'â‘¤ å–¶æ¥­CF',
+      score: p5 ?? 0,
+      max: 10,
+      status: p5 === null ? 'empty' : p5 >= 6 ? 'pass' : 'fail',
+      label: p5 === null ? 'æœªå…¥åŠ›' : p5 === 10 ? 'é»’å­—ï¼‹å¢—åŠ ' : p5 === 6 ? 'æ¯Žå¹´é»’å­—' : 'èµ¤å­—å¹´ã‚ã‚Š',
+      isKO: v5 === '0'
+    });
+
+    // â‘¥ ç¾é‡‘ç­‰
+    const v6 = d.cash;
+    const p6 = v6 !== '' ? parseInt(v6) : null;
+    items.push({
+      name: 'â‘¥ ç¾é‡‘ç­‰',
+      score: p6 ?? 0,
+      max: 10,
+      status: p6 === null ? 'empty' : p6 === 10 ? 'pass' : p6 === 5 ? 'caution' : 'fail',
+      label: p6 === null ? 'æœªå…¥åŠ›' : p6 === 10 ? 'å¢—åŠ å‚¾å‘' : p6 === 5 ? 'æ¨ªã°ã„' : 'æ¸›å°‘å‚¾å‘',
+      isKO: false
+    });
+
+    // â‘¦ é…å½“é‡‘
+    const v7 = d.div;
+    const p7 = v7 !== '' ? parseInt(v7) : null;
+    items.push({
+      name: 'â‘¦ 1 åº¦è§†å½“é‡‘',
+      score: p7 ?? 0,
+      max: 15,
+      status: p7 === null ? 'empty' : p7 >= 8 ? 'pass' : 'fail',
+      label: p7 === null ? 'æœªå…¥åŠ›' : p7 === 15 ? 'å®‰å®šï¼‹å¢—é…' : p7 === 8 ? 'åˆ‰è¨˜ï¼ˆæ€§å‘ã§ã‚‰)' : 'è§¨é…æ¨´ã‚ã‚Š'',
+      isKO: v7 === '0'
+    });
+
+    // â‘§ é…å½“é€§å‘
+    const pr = parseFloat(d.pr);
+    let p8 = 0, l8 = 'æœªå…¥åŠ›', s8 = 'empty';
+    if (!isNaN(pr)) {
+      if (pr >= 30 && pr <= 50)        { p8 = 10; l8 = `${pr}%ï¼ˆâ—Žå¥å…¨ï¼‰`;  s8 = 'pass'; }
+      else if ((pr >= 20 && pr < 30) || (pr > 50 && pr <= 70)) {
+                                         p8 = 6;  l8 = `${pr}%ï¼ˆâ—‹æ™®é€šï¼‰`;  s8 = 'caution'; }
+      else if (pr > 70 && pr <= 80)    { p8 = 2;  l8 = `${pr}%ï¼ˆâ–³æ³¨æ„ï¼‰`;  s8 = 'caution'; }
+      else                             { p8 = 0;  l8 = `${pr}%ï¼ˆÃ—ä¸å¯ï¼‰`;  s8 = 'fail'; }
+    }
+    items.push({ name: 'â‘§ é…å½“æ€§å‘', score: p8, max: 10, status: s8, label: l8, isKO: !isNaN(pr) && pr > 80 });
+
+    const total = items.reduce((a, b) => a + b.score, 0);
+    const kos = items.filter(i => i.isKO).map(i => i.name);
+
+    let verdict, vClass;
+    if (kos.length > 0) {
+      verdict = 'Ã— æŠ•è³‡ä¸é©æ ¼ï¼ˆKOé …ç›®ã‚ã‚Šï¼‰'; vClass = 'v-bad';
+    } else if (total >= 80) {
+      verdict = 'â—Ž å„ªè‰¯éŠ˜æŸ„å€™è£œ';             vClass = 'v-excellent';
+    } else if (total >= 60) {
+      verdict = 'â—‹ æ¤œè¨Žã«å€¤ã™ã‚‹';             vClass = 'v-good';
+    } else if (total >= 40) {
+      verdict = 'â–³ è¦æ¤œè¨Ž';                   vClass = 'v-caution';
+    } else {
+      verdict = 'Ã— æŠ•è³‡ä¸é©æ ¼';               vClass = 'v-bad';
+    }
+
+    return { total, items, verdict, vClass, kos };
+  }
+
+  // ============================
+  //  Get form data
+  // ============================
+  function getForm() {
+    return {
+      name:   document.getElementById('f_name').value.trim(),
+      code:   document.getElementById('f_code').value.trim(),
+      yield_: document.getElementById('f_yield').value,
+      sector: document.getElementById('f_sector').value.trim(),
+      sales:  document.getElementById('f_sales').value,
+      eps:    document.getElementById('f_eps').value,
+      om:     document.getElementById('f_om').value,
+      er:     document.getElementById('f_er').value,
+      cf:     document.getElementById('f_cf').value,
+      cash:   document.getElementById('f_cash').value,
+      div:    document.getElementById('f_div').value,
+      pr:     document.getElementById('f_pr').value,
+      memo:   document.getElementById('f_memo').value.trim()
+    };
+  }
+
+  // ============================
+  //  Realtime score update
+  // ============================
+  function updateScore() {
+    const d = getForm();
+    const hasAny = d.sales || d.eps || d.om || d.er || d.cf || d.cash || d.div || d.pr;
+    const panel = document.getElementById('scorePanel');
+
+    if (!hasAny) {
+      panel.innerHTML = `<div class="empty-state">
+        <div class="empty-icon">ðŸ“Š</div>
+        <p>å„é …ç›®ã‚’å…¥åŠ›ã™ã‚‹ã¨<br>ã‚¹ã‚³ã‚¢ãŒãƒªã‚¢ãƒ«ã‚¿ã‚¤ãƒ ã§è¡¨ç¤ºã•ã‚Œã¾ã™</p>
+      </div>`;
+      return;
+    }
+
+    const r = calcScore(d);
+    const pct = r.total;
+    const color = pct >= 80 ? '#15803d' : pct >= 60 ? '#1d4ed8' : pct >= 40 ? '#d97706' : '#b91c1c';
+    const circumference = 2 * Math.PI * 68;
+    const dashOffset = circumference * (1 - pct / 100);
+
+    const KO_REASONS = {
+      'â‘  å£²ä¸Šé«˜':   'å£²ä¸Šé«˜ãŒä¸‹è½å‚¾å‘ã§ã™ã€‚æœ¬æ¥­ã®ç¸®å°ãŒç¶šã„ã¦ãŠã‚Šã€æ¥­ç¸¾æ‚ªåŒ–ã®ãƒªã‚¹ã‚¯ãŒã‚ã‚Šã¾ã™ã€‚',
+      'â‘¡ EPS':      'EPSï¼ˆ1æ ªã‚ãŸã‚Šåˆ©ç›Šï¼‰ãŒä¸‹è½å‚¾å‘ã§ã™ã€‚åŽç›Šæ€§ãŒä½Žä¸‹ã—ã¦ãŠã‚Šã€å°†æ¥ã®æ¸›é…ã«ã¤ãªãŒã‚‹å¯èƒ½æ€§ãŒã‚ã‚Šã¾ã™ã€‚',
+      'â‘¢ å–¶æ¥­åˆ©ç›ŠçŽ‡': `å–¶æ¥­åˆ©ç›ŠçŽ‡ãŒ5%æœªæº€ã§ã™ã€‚ãƒªãƒ™å¤§åŸºæº–ã§ã¯æœ€ä½Ž5%ãŒå¿…è¦ã§ã™ã€‚æœ¬æ¥­ã§ã®ç¨¼ãåŠ›ãŒå¼±ãã€ç«¶åˆã«å¯¾ã™ã‚‹å„ªä½æ€§ãŒä½Žã„ã¨åˆ¤æ–­ã•ã‚Œã¾ã™ã€‚`,
+      'â‘£ è‡ªå·±è³‡æœ¬æ¯”çŽ‡': `è‡ªå·±è³‡æœ¬æ¯”çŽ‡ãŒ40%æœªæº€ã§ã™ã€‚ãƒªãƒ™å¤§åŸºæº–ã§ã¯æœ€ä½40%ãŒå¿…è¦ã§ã™ã€‚ä»–äººè³‡æœ¬ï¼ˆå€Ÿé‡‘ï¼‰ã¸ã®ä¾å­˜åº¦ãŒé«˜ãã€æ™¯æ°—æ‚ªåŒ–æ™‚ã«è²¡å‹™çš„ãªãƒªã‚¹ã‚¯ãŒé«˜ã¾ã‚Šã¾ã™ã€‚`,
+      'â‘¤ å–¶æ¥­CF':   'ç›´è¿‘10å¹´é–“ã«å–¶æ¥­ã‚­ãƒ£ãƒƒã‚·ãƒ¥ãƒ•ãƒ­ãƒ¼ãŒèµ¤å­—ã«ãªã£ãŸå¹´ãŒã‚ã‚Šã¾ã™ã€‚äº‹æ¥­ã‹ã‚‰ã®ç¾é‡‘å‰µå‡ºåŠ›ã«å•é¡ŒãŒã‚ã‚Šã€é…å½“ã®åŽŸè³‡ãŒä¸å®‰å®šã§ã™ã€‚',
+      'â‘¦ 1æ ªé…å½“é‡‘': 'ç›´è¿‘10å¹´ä»¥å†…ã«æ¸›é…ï¼ˆé…å½“é‡‘ã®å¼•ãä¸‹ã’ï¼‰ãŒç¢ºèªã•ã‚Œã¾ã—ãŸã€‚é…å½“ã®ä¿¡é ¼æ€§ãƒ»¥®‰å®šæ€§ãŒä½Žã„ã¨åˆ¤æ–­ã•ã‚Œã¾ã™ã€‚',
+      'â‘§ é…å½“æ€§å‘': 'é…å½“æ€§å‘ãŒ80%ã‚’è¶…ãˆã¦ã„ã¾ã™ã€‚åˆ©ç›Šã®å¤§éƒ¨åˆ†ã‚’é…å½“ã«å……ã¦ã¦ãŠã‚Šã€æ¥­ç¸¾ãŒå°‘ã—æ‚ªåŒ–ã™ã‚‹å„ªä½æ€§ãŒã‚ã‚Šã¾ã™ã€‚'
+    };
+    const koHtml = r.kos.length > 0 ? `
+      <div class="ko-wrap">
+        <div class="ko-title">âš ï¸ KOé …ç›®ï¼ˆã“ã‚ŒãŒã‚ã‚‹ã¨Ã—åˆ¤å®šï¼‰</div>
+        <div class="ko-badges">${r.kos.map(k => `<span class="ko-b">${k}</span>`).join('')}</div>
+        <div class="ko-details">${r.kos.map(k => `
+          <div class="ko-detail-item">
+            <span class="ko-detail-name">âœ— ${k}</span>
+            <span class="ko-detail-text">${KO_REASONS[k] || ''}</span>
+          </div>`).join('')}
+        </div>
+      </div>` : '';
+
+    const critHtml = r.items.map(it => {
+      const bClass = it.status === 'pass' ? 'bp' : it.status === 'caution' ? 'bc' : it.status === 'fail' ? 'bf' : 'be';
+      const bLabel = it.status === 'pass' ? 'â—‹' : it.status === 'caution' ? 'â–³' : it.status === 'fail' ? 'Ã—' : 'â€”';
+      return `<div class="crit-item crit-${it.status}">
+        <span style="font-size:0.82rem;font-weight:600">${it.name}</span>
+        <div class="crit-right">
+          <span class="crit-label">${it.label}</span>
+          <span class="crit-pts">${it.score}/${it.max}pt</span>
+          <span class="badge-s ${bClass}">${bLabel}</span>
+        </div>
+      </div>`;
+    }).join('');
+
+    panel.innerHTML = `
+      <div style="position:relative;width:156px;height:156px">
+        <svg width="156" height="156" viewBox="0 0 156 156">
+          <circle cx="78" cy="78" r="68" fill="none" stroke="#e2e8f0" stroke-width="13"
+            transform="rotate(-90 78 78)"/>
+          <circle cx="78" cy="78" r="68" fill="none" stroke="${color}" stroke-width="13"
+            stroke-dasharray="${circumference}" stroke-dashoffset="${dashOffset}"
+            stroke-linecap="round" transform="rotate(-90 78 78)"
+            style="transition:stroke-dashoffset 0.5s ease"/>
+        </svg>
+        <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center">
+          <div style="font-size:2.6rem;font-weight:900;line-height:1;color:${color}">${pct}</div>
+          <div style="font-size:0.72rem;color:#94a3b8">/ 100ç‚¹</div>
+        </div>
+      </div>
+      <div class="verdict ${r.vClass}">${r.verdict}</div>
+      ${koHtml}
+      <div style="width:100%">${critHtml}</div>
+    `;
+  }
+
+  // ============================
+  //  Add / Update
+  // ============================
+  function addOrUpdate() {
+    const d = getForm();
+    if (!d.name) { alert('éŠ˜æŸ„åã‚’å…¥åŠ›ã—ã¦ãã ã•ã„'); return; }
+    const result = calcScore(d);
+    const entry = { ...d, result };
+
+    if (editingIdx >= 0) {
+      stocks[editingIdx] = entry;cks[editingIdx] = entry;
+      editingIdx = -1;
+      document.getElementById('addBtn').textContent = 'ï¼‹ éŠ˜æŸ„ã‚’è¿½åŠ ';
+    } else {
+      stocks.push(entry);
+    }
+    clearForm();
+    renderList();
+  }
+
+  // ============================
+  //  Clear form
+  // ============================
+  function clearForm() {
+    ['f_name','f_code','f_yield','f_sector','f_om','f_er','f_pr','f_memo'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    ['f_sales','f_eps','f_cf','f_cash','f_div'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    editingIdx = -1;
+    document.getElementById('addBtn').textContent = 'ï¼‹ éŠ˜æŸ„ã‚’è¿½åŠ ';
+    updateScore();
+  }
+
+  // ============================
+  //  Edit
+  // ============================
+  function editStock(i) {
+    const s = stocks[i];
+    document.getElementById('f_name').value  = s.name;
+    document.getElementById('f_code').value  = s.code;
+    document.getElementById('f_yield').value = s.yield_;
+    document.getElementById('f_sector').value= s.sector;
+    document.getElegentById('f_sales').value = s.sales;
+    document.getElementById('f_eps').value   = s.eps;
+    document.getElementById('f_om').value    = s.om;
+    document.getElementById('f_er').value    = s.er;
+    document.getElementById('f_cf').value    = s.cf;
+    document.getElementById('f_cash').value  = s.cash;
+    document.getElementById('f_div').value   = s.div;
+    document.getElementById('f_pr').value    = s.pr;
+    document.getElementById('f_memo').value  = s.memo;
+    editingIdx = i;
+    document.getElementById('addBtn').textContent = 'âœï¸ æ›´æ–°ã™ã‚‹';
+    updateScore();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ============================
+  //  Delete
+  // ============================
+  function deleteStock(i) {
+    if (confirm(`ã€Œ${stocks[i].name}ã€ã‚’å‰Šé™¤ã—ã¾ã™ã‹ï¼Ÿ`)) {
+      stocks.splice(i, 1);
+      if (editingIdx === i) { clearForm(); }
+      renderList();
+    }
+  }
+
+  // ============================
+  //  Render list
+  // ============================
+  function renderList() {
+    const el = document.getElementById('stockList');
+    document.getElementById('stockCount').textContent = stocks.length;
+
+    if (stocks.length === 0) {
+      el.innerHTML = `<div class="empty-state">
+        <div class="empty-icon">ðŸ“‹</div>
+        <p>ã¾ã éŠ˜æŸ„ãŒç™»éŒ²ã•ã‚Œã¦ã„ã¾ã›ã‚“<br>ä¸Šã®ãƒ•ã‚©ãƒ¼ãƒ ã‹ã‚‰éŠ˜æŸ„ã‚’è¿½åŠ ã—ã¦ãã ã•ã„</p>
+      </div>`;
+      return;
+    }
+
+    // Sort by score desc, keep original index
+    const sorted = stocks.map((s, i) => ({ ...s, origI: i }))
+      .sort((a, b) => b.result.total - a.result.total);
+
+    const rankIcon = (r) => r === 0 ? 'ðŸ¥‡' : r === 1 ? 'ðŸ¥ˆ' : r === 2 ? 'ðŸ¥‰' : (r + 1) + 'ä½';
+
+    const dotMap = (st) => {
+      if (st === 'pass')    return '<span class="dot" title="â—‹">ðŸŸ¢</span>';
+      if (st === 'caution') return '<span class="dot" title="â–³">ðŸŸ¡</span>';
+      if (st === 'fail')    return '<span class="dot" title="Ã—">ðŸ”´</span>';
+      return '<span class="dot" title="æœªå…¥åŠ›">âšª</span>';
+    };
+
+    const rows = sorted.map((s, rank) => {
+      const sc = s.result.total;
+      const fc = sc >= 80 ? 'fill-ex' : sc >= 60 ? 'fill-go' : sc >= 40 ? 'fill-ca' : 'fill-ba';
+      const koNote = s.result.kos.length > 0
+        ? `<div style="font-size:0.72rem;color:#dc2626;margin-top:3px">âš ï¸ KO: ${s.result.kos.length}é …ç›®</div>`
+        : '';
+      return `
+        <tr>
+          <td style="font-weight:800;font-size:1rem">${rankIcon(rank)}</td>
+          <td>
+            <div class="stock-name">${esc(s.name)}</div>
+            <div class="stock-meta">${s.code ? '#' + esc(s.code) : ''}${s.sector ? ' / ' + esc(s.sector) : ''}</div>
+          </td>
+          <td>${s.yield_ ? `<span class="yield-val">${s.yield_}%</span>` : 'â€”'}</td>
+          <td>
+            <div class="s-bar">
+              <div class="s-bar-bg">
+                <div class="s-bar-fill ${fc}" style="width:${sc}%"></div>
+              </div>
+              <span class="s-num">${sc}</span>
+            </div>
+          </td>
+          <td>
+            <div class="verdict ${s.result.vClass}" style="font-size:0.8rem;padding:6px 12px">${s.result.verdict}</div>
+            ${koNote}
+          </td>
+          <td><div class="dot-row">${s.result.items.map(it => dotMap(it.status)).join('')}</div></td>
+          <td class="memo-cell">${esc(s.memo) || 'â€”'}</td>
+          <td>
+            <div class="action-btns">
+              <button class="btn btn-sm btn-edit" onclick="editStock(${s.origI})">ç·¨é›†</button>
+              <button class="btn btn-sm btn-danger" onclick="deleteStock(${s.origI})">å‰Šé™¤</button>
+            </div>
+          </td>
+        </tr>`;
+    }).join('');
+
+    el.innerHTML = `
+      <div style="font-size:0.82rem;color:#64748b;margin-bottom:12px">
+        <strong style="color:#0f172a">${stocks.length}</strong> éŠ˜æŸ„ç™»éŒ²æ¸ˆã¿ &nbsp;|&nbsp;
+        ã‚¹ã‚³ã‚¢é †ã«è¡¨ç¤º &nbsp;|&nbsp;
+        ðŸŸ¢ â—‹åˆæ ¼ &nbsp; ðŸŸ¡ â–³æ³¨æ„ &nbsp; ðŸ”´ Ã—ä¸åˆæ ¼ &nbsp; âšª æœªå…¥åŠ›
+        &nbsp;ï¼ˆâ‘ â‘¡â‘¢â‘£â‘¤â‘¥â‘¦â‘§ã®é †ï¼‰
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>é †ä½</th>
+              <th>éŠ˜æŸ„</th>
+              <th>åˆ©å›žã‚Š</th>
+              <th style="min-width:150px">ã‚¹ã‚³ã‚¢</th>
+              <th>åˆ¤å®š</th>
+              <th>8é …ç›®</th>
+              <th>ãƒ¡ãƒ¢</th>
+              <th>æ“ä½œ</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+  }
+
+  // HTML escape
+  function esc(str) {
+    return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ==================================================
+  //  IR BANK è‡ªå‹•å–å¾—
+  // ==================================================
+  // ãƒ­ãƒ¼ã‚«ãƒ«é–‹ç™ºæ™‚ã¯ localhost:8080ã€ã‚¯ãƒ©ã‚¦ãƒ‰å…¬é–‹æ™‚ã¯åŒä¸€ã‚ªãƒªã‚¸ãƒ³ã«ãªã‚‹
+  const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:8080' : '';
+
+  function showFetchStatus(type, html) {
+    const el = document.getElementById('fetchStatus');
+    el.className = 'fetch-status span-2 show ' + type;
+    el.innerHTML = html;
+  }
+  function hideFetchStatus() {
+    const el = document.getElementById('fetchStatus');
+    el.className = 'fetch-status span-2';
+    el.innerHTML = '';
+  }
+
+  const TREND_TO_SALES = { up: '10', flat: '5', down: '0', unknown: '' };
+  const TREND_TO_EPS   = { up: '15', flat: '7', down: '0', unknown: '' };
+  const TREND_TO_CASH  = { up: '10', flat: '5', down: '0', unknown: '' };
+  const CF_TO_VAL      = { up_positive: '10', positive: '6', has_negative: '0', unknown: '' };
+  const DIV_TO_VAL     = { stable_growing: '15', stable: '8', has_cut: '0', unknown: '' };
+
+  async function fetchFromIRBank() {
+    const code = document.getElementById('f_code').value.trim();
+    if (!code) {
+      showFetchStatus('error', 'âš ï¸ è¨¼åˆ¸ã‚³ãƒ¼ãƒ‰ã‚’å…¥åŠ›ã—ã¦ãã ã•ã„');
+      return;
+    }
+    const btn = document.getElementById('fetchBtn');
+    btn.disabled = true;
+    showFetchStatus('loading',
+      '<div class="fetch-spinner"></div>' +
+      `IR BANK ã‹ã‚‰ <strong>${code}</strong> ã®ãƒ‡ãƒ¼ã‚¿ã‚’å–å¾—ä¸­...`
+    );
+    try {
+      const res = await fetch(`${API_BASE}/api/stock/${encodeURIComponent(code)}`, {
+        signal: AbortSignal.timeout(25000)
+      });
+      const json = await res.json();
+      if (!json.success) {
+        showFetchStatus('error', 'âŒ ' + json.error);
+        return;
+      }
+      const d = json.data;
+      const dbg = d._debug || {};
+
+      // ãƒ•ã‚©ãƒ¼ãƒ ã¸ã®è‡ªå‹•å…¥åŠ›
+      if (d.name && !document.getElementById('f_name').value)
+        document.getElementById('f_name').value = d.name;
+      if (d.dividend_yield != null)
+        document.getElementById('f_yield').value = d.dividend_yield;
+
+      const setSelect = (id, val) => {
+        if (val !== '' && val != null) document.getElementById(id).value = val;
+      };
+      setSelect('f_sales', TREND_TO_SALES[d.sales_trend]  || '');
+      setSelect('f_eps',   TREND_TO_EPS[d.eps_trend]      || '');
+      setSelect('f_cf',    CF_TO_VAL[d.operating_cf]      || '');
+      setSelect('f_cash',  TREND_TO_CASH[d.cash_trend]    || '');
+      setSelect('f_div',   DIV_TO_VAL[d.dividend_trend]   || '');
+
+      if (d.operating_margin != null) document.getElementById('f_om').value = d.operating_margin;
+      if (d.equity_ratio     != null) document.getElementById('f_er').value = d.equity_ratio;
+      if (d.payout_ratio     != null) document.getElementById('f_pr').value = d.payout_ratio;
+
+      // å–å¾—çµæžœã‚µãƒžãƒªãƒ¼è¡¨ç¤º
+      const fmtN = (v) => v != null ? Number(v).toLocaleString() : 'â€”';
+      const tl = (t) => ({up:'â†— å³è‚©ä¸ŠãŒã‚Š',flat:'â†’ æ¨ªã°ã„',down:'â†˜ ä¸‹è½',unknown:'ä¸æ˜Ž'}[t]||t);
+      const cl = (t) => ({up_positive:'âœ… å…¨é»’å­—+å¢—åŠ ',positive:'âœ… å…¨é»’å­—',has_negative:'âŒ èµ¤å­—å¹´ã‚ã‚Š',unknown:'ä¸æ˜Ž'}[t]||t);
+      const dl = (t) => ({stable_growing:'âœ… å¢—é…ç¶™ç¶š',stable:'âœ… å®‰å®šï¼ˆæ¸›é…ãªã—ï¼‰',has_cut:'âŒ æ¸›é…æ­´ã‚ã‚Š',unknown:'ä¸æ˜Ž'}[t]||t);
+      const fmtPairs = (arr) => arr && arr.length ? arr.slice(-3).map(([y,v])=>`${y}: ${fmtN(v)}`).join(' / ') : 'â€”';
+
+      showFetchStatus('success',
+        `<div style="width:100%">` +
+        `<div style="font-weight:700;margin-bottom:8px">âœ… <strong>${d.name||code}</strong> ã®ãƒ‡ãƒ¼ã‚¿ã‚’è‡ªå‹•å…¥åŠ›ã—ã¾ã—ãŸ</div>` +
+        `<table class="debug-table">` +
+        `<tr><th>é …ç›®</th><th>åˆ¤å®š</th><th>ç›´è¿‘ãƒ‡ãƒ¼ã‚¿ï¼ˆå‚è€ƒï¼‰</th></tr>` +
+        `<tr><td>â‘  å£²ä¸Šé«˜</td><td>${tl(d.sales_trend)}</td><td>${fmtPairs(dbg.sales_recent)}</td></tr>` +
+        `<tr><td>â‘¡ EPS</td><td>${tl(d.eps_trend)}</td><td>${fmtPairs(dbg.eps_recent)}</td></tr>` +
+        `<tr><td>â‘¢ å–¶æ¥­åˆ©ç›ŠçŽ‡</td><td>${d.operating_margin!=null?d.operating_margin+'%':'â€”'}</td><td>${fmtPairs(dbg.margin_recent)}</td></tr>` +
+        `<tr><td>â‘£ è‡ªå·±è³‡æœ¬æ¯”çŽ‡</td><td>${d.equity_ratio!=null?d.equity_ratio+'%':'â€”'}</td><td>${fmtPairs(dbg.equity_recent)}</td></tr>` +
+        `<tr><td>â‘¤ å–¶æ¥­CF</td><td>${cl(d.operating_cf)}</td><td>${fmtPairs(dbg.ocf_recent)}</td></tr>` +
+        `<tr><td>â‘¥ ç¾é‡‘ç­‰</td><td>${tl(d.cash_trend)}</td><td>${fmtPairs(dbg.cash_recent)}</td></tr>` +
+        `<tr><td>â‘¦ 1æ ªé…å½“é‡‘</td><td>${dl(d.dividend_trend)}</td><td>${fmtPairs(dbg.div_recent)}</td></tr>` +
+        `<tr><td>â‘§ é…å½“æ€§å‘</td><td>${d.payout_ratio!=null?d.payout_ratio+'%':'â€”'}</td><td>${fmtPairs(dbg.payout_recent)}</td></tr>` +
+        `</table>` +
+        `<div style="margin-top:6px;font-size:0.74rem;color:#64748b">â€» è‡ªå‹•åˆ¤å®šã¯å‚è€ƒå€¤ã§ã™ã€‚IR BANKã§å®Ÿéš›ã®ãƒ‡ãƒ¼ã‚¿ã‚’ç¢ºèªã—ã€å¿…è¦ã«å¿œã˜ã¦æ‰‹å‹•ã§ä¿®æ­£ã—ã¦ãã ã•ã„ã€‚</div>` +
+        `</div>`
+      );
+      updateScore();
+    } catch (err) {
+      if (err.name === 'TimeoutError' || err.name === 'AbortError') {
+        showFetchStatus('error',
+          'â± ã‚¿ã‚¤ãƒ ã‚¢ã‚¦ãƒˆã€‚<code>python server.py</code> ãŒèµ·å‹•ã—ã¦ã„ã‚‹ã‹ç¢ºèªã—ã€' +
+          '<a href="http://localhost:8080" target="_blank" style="color:#1d4ed8">http://localhost:8080</a> ã§é–‹ã„ã¦ãã ã•ã„ã€‚'
+        );
+      } else {
+        showFetchStatus('error',
+          'âŒ ã‚µãƒ¼ãƒãƒ¼ã«æŽ¥ç¶šã§ãã¾ã›ã‚“ã€‚<br>' +
+          'åŒã˜ãƒ•ã‚©ãƒ«ãƒ€ã§ <code>python server.py</code> ã‚’å®Ÿè¡Œã—ã¦ã‹ã‚‰ã€' +
+          '<a href="http://localhost:8080" target="_blank" style="color:#1d4ed8">http://localhost:8080</a> ã§é–‹ã„ã¦ãã ã•ã„ã€‚'
+        );
+      }
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  // ============================
+  //  Attach listeners
+  // ============================
+  const watchIds = ['f_sales','f_eps','f_om','f_er','f_cf','f_cash','f_div','f_pr'];
+  watchIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('change', updateScore);
+      el.addEventListener('input',  updateScore);
+    }
+  });
+
+  // Initial render
+  renderList();
+</script>
+</body>
+</html>
