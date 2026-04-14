@@ -481,7 +481,9 @@ def fetch_yahoo_ranking(max_stocks=300):
 # ==================================================
 @app.route('/')
 def index():
-    return send_from_directory(BASE_DIR, 'index.html')
+    resp = send_from_directory(BASE_DIR, 'index.html')
+    resp.headers['Content-Type'] = 'text/html; charset=utf-8'
+    return resp
 
 
 @app.route('/api/dividend_ranking')
