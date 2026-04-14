@@ -1528,7 +1528,9 @@
   const DIV_TO_VAL     = { stable_growing: '15', stable: '8', has_cut: '0', unknown: '' };
 
   function loadFromBulk(code, name) {
-    // フォームに証券コード・銘柄名をセット
+    // 前の銘柄の値が残らないようにフォームを完全クリア
+    clearForm();
+    // 証券コード・銘柄名をセット
     document.getElementById('f_code').value = code;
     document.getElementById('f_name').value = name;
     // フォームまでスクロール
@@ -1561,24 +1563,19 @@
       const d = json.data;
       const dbg = d._debug || {};
 
-      // フォームへの自動入力
-      if (d.name && !document.getElementById('f_name').value)
-        document.getElementById('f_name').value = d.name;
-      if (d.dividend_yield != null)
-        document.getElementById('f_yield').value = d.dividend_yield;
+      // フォームへの自動入力（常に上書き。未取得項目は空欄にしてスコアのズレを防ぐ）
+      if (d.name) document.getElementById('f_name').value = d.name;
+      document.getElementById('f_yield').value = d.dividend_yield != null ? d.dividend_yield : '';
 
-      const setSelect = (id, val) => {
-        if (val !== '' && val != null) document.getElementById(id).value = val;
-      };
-      setSelect('f_sales', TREND_TO_SALES[d.sales_trend]  || '');
-      setSelect('f_eps',   TREND_TO_EPS[d.eps_trend]      || '');
-      setSelect('f_cf',    CF_TO_VAL[d.operating_cf]      || '');
-      setSelect('f_cash',  TREND_TO_CASH[d.cash_trend]    || '');
-      setSelect('f_div',   DIV_TO_VAL[d.dividend_trend]   || '');
+      document.getElementById('f_sales').value = TREND_TO_SALES[d.sales_trend]  ?? '';
+      document.getElementById('f_eps').value   = TREND_TO_EPS[d.eps_trend]      ?? '';
+      document.getElementById('f_cf').value    = CF_TO_VAL[d.operating_cf]      ?? '';
+      document.getElementById('f_cash').value  = TREND_TO_CASH[d.cash_trend]    ?? '';
+      document.getElementById('f_div').value   = DIV_TO_VAL[d.dividend_trend]   ?? '';
 
-      if (d.operating_margin != null) document.getElementById('f_om').value = d.operating_margin;
-      if (d.equity_ratio     != null) document.getElementById('f_er').value = d.equity_ratio;
-      if (d.payout_ratio     != null) document.getElementById('f_pr').value = d.payout_ratio;
+      document.getElementById('f_om').value = d.operating_margin != null ? d.operating_margin : '';
+      document.getElementById('f_er').value = d.equity_ratio     != null ? d.equity_ratio     : '';
+      document.getElementById('f_pr').value = d.payout_ratio     != null ? d.payout_ratio     : '';
 
       // 取得結果サマリー表示
       const fmtN = (v) => v != null ? Number(v).toLocaleString() : '—';
