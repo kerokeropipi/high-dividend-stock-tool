@@ -1060,9 +1060,10 @@
       const added = alreadyAdded(s.code);
       return `<tr>
         <td style="text-align:center;font-weight:700">${idx + 1}</td>
-        <td>
-          <div style="font-weight:700">${s.name}</div>
+        <td style="cursor:pointer" onclick="loadFromBulk('${s.code}','${s.name.replace(/'/g,"\\'")}')">
+          <div style="font-weight:700;color:#1d4ed8;text-decoration:underline dotted">${s.name}</div>
           <div style="font-size:0.73rem;color:#64748b">${s.code}</div>
+          <div style="font-size:0.68rem;color:#0ea5e9;margin-top:2px">📊 クリックで詳細評価</div>
         </td>
         <td style="text-align:center">
           <span style="font-size:1.15rem;font-weight:900;color:${color}">${sc}</span>
@@ -1525,6 +1526,16 @@
   const TREND_TO_CASH  = { up: '10', flat: '5', down: '0', unknown: '' };
   const CF_TO_VAL      = { up_positive: '10', positive: '6', has_negative: '0', unknown: '' };
   const DIV_TO_VAL     = { stable_growing: '15', stable: '8', has_cut: '0', unknown: '' };
+
+  function loadFromBulk(code, name) {
+    // フォームに証券コード・銘柄名をセット
+    document.getElementById('f_code').value = code;
+    document.getElementById('f_name').value = name;
+    // フォームまでスクロール
+    document.getElementById('fetchStatus').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // IRBANKから自動取得
+    fetchFromIRBank();
+  }
 
   async function fetchFromIRBank() {
     const code = document.getElementById('f_code').value.trim();
