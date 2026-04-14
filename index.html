@@ -877,13 +877,32 @@
     nameInput.addEventListener('blur', () => setTimeout(() => nameDD.classList.remove('open'), 160));
 
     // 証券コードフィールド — 数字4桁で即確定、途中入力でドロップダウン
+    let nameFetchTimer = null;
     codeInput.addEventListener('input', function() {
       const q = this.value.trim();
-      if (!q) { codeDD.classList.remove('open'); return; }
-      // 4桁完全一致 → 即座に銘柄名を補完
-      if (/^\d{4}$/.test(q) && CODE_TO_NAME[q]) {
-        nameInput.value = CODE_TO_NAME[q];
+      clearTimeout(nameFetchTimer);
+      if (!q) { codeDD.classList.remove('open'); nameInput.value = ''; return; }
+      // 4桁完全一致 → ローカルリストで即補完、なければAPIで取得
+      if (/^\d{4}$/.test(q)) {
         codeDD.classList.remove('open');
+        if (CODE_TO_NAME[q]) {
+          nameInput.value = CODE_TO_NAME[q];
+        } else {
+          nameInput.value = '取得中…';
+          nameFetchTimer = setTimeout(async () => {
+            try {
+              const r = await fetch(`/api/name/${q}`);
+              const d = await r.json();
+              if (d.success && d.name && codeInput.value.trim() === q) {
+                nameInput.value = d.name;
+                // ローカルリストにも追記しておく（セッション中は再利用）
+                CODE_TO_NAME[q] = d.name;
+              } else if (codeInput.value.trim() === q) {
+                nameInput.value = '';
+              }
+            } catch { if (codeInput.value.trim() === q) nameInput.value = ''; }
+          }, 300);
+        }
         return;
       }
       // 途中入力 → 前方一致候補を表示

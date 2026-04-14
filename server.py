@@ -209,12 +209,13 @@ def scrape_irbank(code):
     soup = BeautifulSoup(resp.text, 'html.parser')
 
     # ---- 銘柄名 ----
+    # <title>三菱商事（8058）の決算まとめ | IRBANK</title> から抽出
     company_name = ''
-    h1 = soup.find('h1')
-    if h1:
-        raw = h1.get_text(strip=True)
-        m = re.match(r'^\d+\s+(.+)$', raw)
-        company_name = m.group(1) if m else raw
+    title_tag = soup.find('title')
+    if title_tag:
+        m = re.match(r'^(.+?)（\d+）', title_tag.get_text(strip=True))
+        if m:
+            company_name = m.group(1).strip()
 
     # ---- テーブル ----
     tables = soup.find_all('table')
@@ -484,6 +485,39 @@ def index():
     resp = send_from_directory(BASE_DIR, 'index.html')
     resp.headers['Content-Type'] = 'text/html; charset=utf-8'
     return resp
+
+
+@app.route('/api/name/<code>')
+def get_name(code):
+    """証券コードから銘柄名だけを高速取得（タイトルタグのみ参照）"""
+    try:
+        code = re.sub(r'\s', '', str(code))
+        url = f'https://irbank.net/{code}/results'
+        headers = {
+            'User-Agent': (
+                'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) '
+                'AppleWebKit/537.36 (KHTML, like Gecko) '
+                'Chrome/124.0.0.0 Safari/537.36'
+            ),
+            'Accept-Language': 'ja,en;q=0.9',
+            'Referer': 'https://irbank.net/',
+        }
+        resp = requests.get(url, headers=headers, timeout=10, allow_redirects=True)
+        resp.raise_for_status()
+        resp.encoding = 'utf-8'
+        soup = BeautifulSoup(resp.text, 'html.parser')
+        name = ''
+        title_tag = soup.find('title')
+        if title_tag:
+            m = re.match(r'^(.+?)（\d+）', title_tag.get_text(strip=True))
+            if m:
+                name = m.group(1).strip()
+        return jsonify({'success': True, 'code': code, 'name': name})
+    except requests.exceptions.HTTPError as e:
+        status = e.response.status_code if e.response else '?'
+        return jsonify({'success': False, 'error': f'HTTP {status}'}), 404
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 
 @app.route('/api/dividend_ranking')
