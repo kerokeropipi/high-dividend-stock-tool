@@ -724,9 +724,15 @@
           <thead>
             <tr>
               <th>順位</th><th>銘柄</th><th style="text-align:center">スコア</th>
-              <th style="text-align:center">利回り</th><th style="text-align:center">営業利益率</th>
-              <th style="text-align:center">自己資本比率</th><th style="text-align:center">配当性向</th>
-              <th style="text-align:center">売上</th><th style="text-align:center">EPS</th>
+              <th style="text-align:center">利回り</th>
+              <th style="text-align:center">① 売上高</th>
+              <th style="text-align:center">② EPS</th>
+              <th style="text-align:center">③ 営業利益率</th>
+              <th style="text-align:center">④ 自己資本比率</th>
+              <th style="text-align:center">⑤ 営業CF</th>
+              <th style="text-align:center">⑥ 現金等</th>
+              <th style="text-align:center">⑦ 1株配当</th>
+              <th style="text-align:center">⑧ 配当性向</th>
               <th style="text-align:center">操作</th>
             </tr>
           </thead>
@@ -1050,14 +1056,16 @@
     document.getElementById('bulkResults').style.display  = 'block';
     document.getElementById('qualifiedCount').textContent = sortedBulk.length;
 
-    const salesLbl = {'10':'↗上昇', '5':'→横ばい', '0':'↘下落', '':'—'};
-    const epsLbl   = {'15':'↗上昇', '7':'→横ばい', '0':'↘下落', '':'—'};
+    const trendLbl = {'10':'↗上昇','5':'→横ばい','0':'↘下落','15':'↗上昇','7':'→横ばい','':'—'};
+    const cfLbl    = {'10':'✅黒字+増','6':'✅毎年黒字','0':'❌赤字あり','':'—'};
+    const divLbl   = {'15':'✅増配継続','8':'✅安定','0':'❌減配あり','':'—'};
     const alreadyAdded = code => !!stocks.find(s => s.code === code);
 
     const rows = sortedBulk.map((s, idx) => {
       const sc    = s.result.total;
       const color = sc >= 80 ? '#15803d' : '#1d4ed8';
       const added = alreadyAdded(s.code);
+      const cell = (v, suffix='') => `<td style="text-align:center;font-size:0.78rem">${v ? v + suffix : '—'}</td>`;
       return `<tr>
         <td style="text-align:center;font-weight:700">${idx + 1}</td>
         <td style="cursor:pointer" onclick="loadFromBulk('${s.code}','${s.name.replace(/'/g,"\\'")}')">
@@ -1069,12 +1077,15 @@
           <span style="font-size:1.15rem;font-weight:900;color:${color}">${sc}</span>
           <span style="font-size:0.68rem;color:#94a3b8">/100</span>
         </td>
-        <td style="text-align:center">${s.yield_ ? s.yield_ + '%' : '—'}</td>
-        <td style="text-align:center">${s.om ? s.om + '%' : '—'}</td>
-        <td style="text-align:center">${s.er ? s.er + '%' : '—'}</td>
-        <td style="text-align:center">${s.pr ? s.pr + '%' : '—'}</td>
-        <td style="text-align:center;font-size:0.78rem">${salesLbl[s.sales] ?? '—'}</td>
-        <td style="text-align:center;font-size:0.78rem">${epsLbl[s.eps]     ?? '—'}</td>
+        ${cell(s.yield_, '%')}
+        <td style="text-align:center;font-size:0.78rem">${trendLbl[s.sales] ?? '—'}</td>
+        <td style="text-align:center;font-size:0.78rem">${trendLbl[s.eps]   ?? '—'}</td>
+        ${cell(s.om, '%')}
+        ${cell(s.er, '%')}
+        <td style="text-align:center;font-size:0.78rem">${cfLbl[s.cf]   ?? '—'}</td>
+        <td style="text-align:center;font-size:0.78rem">${trendLbl[s.cash] ?? '—'}</td>
+        <td style="text-align:center;font-size:0.78rem">${divLbl[s.div] ?? '—'}</td>
+        ${cell(s.pr, '%')}
         <td style="text-align:center">
           <button class="btn-add-stock ${added ? 'added' : ''}" id="addBtn_${s.code}"
             onclick="addBulkStock(${idx})" ${added ? 'disabled' : ''}>
