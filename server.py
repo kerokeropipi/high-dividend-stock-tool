@@ -518,6 +518,94 @@ def get_name(code):
         return jsonify({'success': False, 'error': '銘柄名の取得に失敗しました。しばらくしてから再試行してください。'}), 500
 
 
+@app.route('/api/profile/<code>')
+def get_profile(code):
+    """Yahoo Finance から企業情報（特色・連結事業）を取得"""
+    from flask import request as flask_request
+    if not _check_referer(flask_request):
+        return jsonify({'success': False, 'error': 'アクセスが拒否されました。'}), 403
+    if not _check_rate_limit(flask_request.remote_addr):
+        return jsonify({'success': False, 'error': 'リクエストが多すぎます。しばらくしてから再試行してください。'}), 429
+    try:
+        code = re.sub(r'\s', '', str(code))
+        if not _validate_code(code):
+            return jsonify({'success': False, 'error': '証券コードは4桁の数字を入力してください。'}), 400
+        url = f'https://finance.yahoo.co.jp/quote/{code}.T/profile'
+        headers = {
+            'User-Agent': (
+                'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) '
+                'AppleWebKit/537.36 (KHTML, like Gecko) '
+                'Chrome/124.0.0.0 Safari/537.36'
+            ),
+            'Accept-Language': 'ja,en;q=0.9',
+            'Referer': 'https://finance.yahoo.co.jp/',
+        }
+        resp = requests.get(url, headers=headers, timeout=10)
+        resp.raise_for_status()
+        soup = BeautifulSoup(resp.content, 'html.parser')
+
+        tokushoku = ''
+        jigyou = ''
+        jigyou_label = '連結事業'
+
+        # 方法1: dt/dd 定義リスト形式
+        for dt in soup.find_all('dt'):
+            label = dt.get_text(strip=True)
+            dd = dt.find_next_sibling('dd')
+            if not dd:
+                continue
+            content = dd.get_text(strip=True)
+            if '特色' in label and not tokushoku:
+                tokushoku = content
+            elif '連結事業' in label and not jigyou:
+                jigyou = content
+                jigyou_label = '連結事業'
+            elif '単独事業' in label and not jigyou:
+                jigyou = content
+                jigyou_label = '単独事業'
+
+        # 方法2: 見出しタグの後続兄弟要素
+        if not tokushoku or not jigyou:
+            for heading in soup.find_all(['h2', 'h3', 'h4', 'th', 'strong']):
+                txt = heading.get_text(strip=True)
+                sib = heading.find_next_sibling()
+                if not sib:
+                    continue
+                content = sib.get_text(strip=True)
+                if txt in ('特色', '【特色】') and not tokushoku:
+                    tokushoku = content
+                elif ('連結事業' in txt or '【連結事業】' in txt) and not jigyou:
+                    jigyou = content
+                    jigyou_label = '連結事業'
+                elif ('単独事業' in txt or '【単独事業】' in txt) and not jigyou:
+                    jigyou = content
+                    jigyou_label = '単独事業'
+
+        # 方法3: ページ全文の行解析
+        if not tokushoku or not jigyou:
+            lines = [l.strip() for l in soup.get_text('\n').split('\n') if l.strip()]
+            for i, line in enumerate(lines):
+                if line in ('特色', '【特色】') and i + 1 < len(lines) and not tokushoku:
+                    tokushoku = lines[i + 1]
+                elif (('連結事業' in line or '単独事業' in line) and len(line) <= 10
+                        and i + 1 < len(lines) and not jigyou):
+                    jigyou = lines[i + 1]
+                    jigyou_label = '連結事業' if '連結' in line else '単独事業'
+
+        return jsonify({
+            'success': True,
+            'code': code,
+            'tokushoku': tokushoku[:500],
+            'jigyou': jigyou[:300],
+            'jigyou_label': jigyou_label,
+        })
+    except requests.exceptions.HTTPError as e:
+        status = e.response.status_code if e.response else '?'
+        return jsonify({'success': False, 'error': f'企業情報が見つかりません（HTTP {status}）。'}), 404
+    except Exception:
+        return jsonify({'success': False, 'error': '企業情報の取得に失敗しました。'}), 500
+
+
 @app.route('/api/dividend_ranking')
 def dividend_ranking():
     from flask import request as flask_request
