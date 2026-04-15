@@ -40,6 +40,14 @@
     }
     @media (max-width: 960px) { .top-grid { grid-template-columns: 1fr; } }
 
+    /* Right column */
+    .right-col { display: flex; flex-direction: column; gap: 22px; }
+
+    /* Chart */
+    .chart-placeholder { color: #94a3b8; font-size: 0.82rem; text-align: center; padding: 28px 0; }
+    #tvChartContainer { min-height: 60px; }
+    #tvChartContainer iframe { border-radius: 8px; }
+
     /* Card */
     .card {
       background: white;
@@ -657,16 +665,29 @@
       </div>
     </div><!-- /form card -->
 
-    <!-- Score Panel -->
-    <div class="card mb-22">
-      <div class="card-title">🏆 評価スコア（リアルタイム）</div>
-      <div class="score-panel" id="scorePanel">
-        <div class="empty-state">
-          <div class="empty-icon">📊</div>
-          <p>各項目を入力すると<br>スコアがリアルタイムで表示されます</p>
+    <!-- Right column: Score + Chart -->
+    <div class="right-col">
+
+      <!-- Score Panel -->
+      <div class="card">
+        <div class="card-title">🏆 評価スコア（リアルタイム）</div>
+        <div class="score-panel" id="scorePanel">
+          <div class="empty-state">
+            <div class="empty-icon">📊</div>
+            <p>各項目を入力すると<br>スコアがリアルタイムで表示されます</p>
+          </div>
         </div>
       </div>
-    </div>
+
+      <!-- Chart Panel -->
+      <div class="card">
+        <div class="card-title">📈 株価チャート <span style="font-size:0.72rem;font-weight:500;color:#64748b;margin-left:4px">powered by TradingView</span></div>
+        <div id="tvChartContainer">
+          <div class="chart-placeholder">証券コードを入力して「🔄 自動取得」を押すと株価チャートが表示されます</div>
+        </div>
+      </div>
+
+    </div><!-- /right-col -->
 
   </div><!-- /top-grid -->
 
@@ -1399,6 +1420,7 @@
     });
     document.getElementById('companyProfile').innerHTML =
       '<div class="empty-profile">証券コードを入力して「🔄 自動取得」を押すと企業の特色・事業内容が表示されます</div>';
+    updateChart('');
     ['f_sales','f_eps','f_cf','f_cash','f_div'].forEach(id => {
       document.getElementById(id).value = '';
     });
@@ -1633,8 +1655,9 @@
         `</div>`
       );
       updateScore();
-      // 企業情報も非同期で取得
+      // 企業情報・チャートも非同期で取得
       fetchProfile(code);
+      updateChart(code);
     } catch (err) {
       if (err.name === 'TimeoutError' || err.name === 'AbortError') {
         showFetchStatus('error',
@@ -1650,6 +1673,37 @@
       }
     } finally {
       btn.disabled = false;
+    }
+  }
+
+  // ============================
+  //  株価チャート（TradingView）
+  // ============================
+  function updateChart(code) {
+    const container = document.getElementById('tvChartContainer');
+    if (!code) {
+      container.innerHTML = '<div class="chart-placeholder">証券コードを入力して「🔄 自動取得」を押すと株価チャートが表示されます</div>';
+      return;
+    }
+    const widgetId = 'tv_' + Date.now();
+    container.innerHTML = `<div id="${widgetId}" style="height:400px"></div>`;
+    const symbol = `TSE:${code}`;
+    const buildWidget = () => {
+      if (typeof TradingView === 'undefined') return;
+      new TradingView.widget({
+        autosize: true, height: 400, symbol: symbol,
+        interval: 'W', timezone: 'Asia/Tokyo', theme: 'light',
+        style: '1', locale: 'ja', toolbar_bg: '#f1f3f6',
+        enable_publishing: false, hide_side_toolbar: false,
+        allow_symbol_change: false, container_id: widgetId
+      });
+    };
+    if (window.TradingView) { buildWidget(); }
+    else {
+      const s = document.createElement('script');
+      s.src = 'https://s3.tradingview.com/tv.js';
+      s.onload = buildWidget;
+      document.head.appendChild(s);
     }
   }
 
