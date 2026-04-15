@@ -280,14 +280,29 @@
 
     .action-btns { display: flex; gap: 5px; }
 
-    /* Memo cell */
-    .memo-cell {
-      max-width: 160px;
-      font-size: 0.78rem;
-      color: #64748b;
-      white-space: normal;
-      line-height: 1.4;
+    /* Company Profile */
+    .company-profile {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 14px 16px;
+      min-height: 60px;
+      font-size: 0.85rem;
+      line-height: 1.75;
     }
+    .empty-profile { color: #94a3b8; font-size: 0.82rem; padding: 4px 0; }
+    .profile-block { margin-bottom: 10px; }
+    .profile-block:last-child { margin-bottom: 0; }
+    .profile-heading {
+      font-weight: 700; color: #0f172a; font-size: 0.8rem;
+      margin-bottom: 5px; display: flex; align-items: center; gap: 6px;
+    }
+    .profile-heading::before {
+      content: ''; display: inline-block; width: 3px; height: 14px;
+      background: #1d4ed8; border-radius: 2px; flex-shrink: 0;
+    }
+    .profile-text { color: #334155; font-size: 0.84rem; }
+    .profile-loading { color: #64748b; font-size: 0.82rem; display: flex; align-items: center; gap: 8px; }
 
     .divider { border: none; border-top: 1px solid #e2e8f0; margin: 0; }
 
@@ -626,11 +641,12 @@
           <small>30〜50% ◎（健全）　50〜70% ○　70%超 ×（要注意）</small>
         </div>
 
-        <div class="section-label">📝 メモ</div>
+        <div class="section-label">🏢 企業情報</div>
 
         <div class="form-group span-2">
-          <label>メモ（将来性・特記事項・検討理由など）</label>
-          <textarea id="f_memo" placeholder="例：19期連続増配。5G投資で成長性あり。通信インフラで景気耐性◎。"></textarea>
+          <div id="companyProfile" class="company-profile">
+            <div class="empty-profile">証券コードを入力して「🔄 自動取得」を押すと企業の特色・事業内容が表示されます</div>
+          </div>
         </div>
 
         <div class="form-actions">
@@ -968,8 +984,7 @@
       cf:     BULK_CF[d.operating_cf]            || '',
       cash:   BULK_TREND_CASH[d.cash_trend]      || '',
       div:    BULK_DIV[d.dividend_trend]         || '',
-      pr:     d.payout_ratio     != null ? String(d.payout_ratio)     : '',
-      memo:   ''
+      pr:     d.payout_ratio     != null ? String(d.payout_ratio)     : ''
     };
   }
 
@@ -1267,8 +1282,7 @@
       cf:     document.getElementById('f_cf').value,
       cash:   document.getElementById('f_cash').value,
       div:    document.getElementById('f_div').value,
-      pr:     document.getElementById('f_pr').value,
-      memo:   document.getElementById('f_memo').value.trim()
+      pr:     document.getElementById('f_pr').value
     };
   }
 
@@ -1380,9 +1394,11 @@
   //  Clear form
   // ============================
   function clearForm() {
-    ['f_name','f_code','f_yield','f_sector','f_om','f_er','f_pr','f_memo'].forEach(id => {
+    ['f_name','f_code','f_yield','f_sector','f_om','f_er','f_pr'].forEach(id => {
       document.getElementById(id).value = '';
     });
+    document.getElementById('companyProfile').innerHTML =
+      '<div class="empty-profile">証券コードを入力して「🔄 自動取得」を押すと企業の特色・事業内容が表示されます</div>';
     ['f_sales','f_eps','f_cf','f_cash','f_div'].forEach(id => {
       document.getElementById(id).value = '';
     });
@@ -1408,7 +1424,6 @@
     document.getElementById('f_cash').value  = s.cash;
     document.getElementById('f_div').value   = s.div;
     document.getElementById('f_pr').value    = s.pr;
-    document.getElementById('f_memo').value  = s.memo;
     editingIdx = i;
     document.getElementById('addBtn').textContent = '✏️ 更新する';
     updateScore();
@@ -1481,7 +1496,6 @@
             ${koNote}
           </td>
           <td><div class="dot-row">${s.result.items.map(it => dotMap(it.status)).join('')}</div></td>
-          <td class="memo-cell">${esc(s.memo) || '—'}</td>
           <td>
             <div class="action-btns">
               <button class="btn btn-sm btn-edit" onclick="editStock(${s.origI})">編集</button>
@@ -1508,7 +1522,6 @@
               <th style="min-width:150px">スコア</th>
               <th>判定</th>
               <th>8項目</th>
-              <th>メモ</th>
               <th>操作</th>
             </tr>
           </thead>
@@ -1620,6 +1633,8 @@
         `</div>`
       );
       updateScore();
+      // 企業情報も非同期で取得
+      fetchProfile(code);
     } catch (err) {
       if (err.name === 'TimeoutError' || err.name === 'AbortError') {
         showFetchStatus('error',
@@ -1636,6 +1651,28 @@
     } finally {
       btn.disabled = false;
     }
+  }
+
+  // ============================
+  //  企業情報（Yahoo Finance プロファイル）
+  // ============================
+  async function fetchProfile(code) {
+    const el = document.getElementById('companyProfile');
+    el.innerHTML = '<div class="profile-loading"><div class="fetch-spinner" style="width:14px;height:14px;border-width:2px"></div>企業情報を取得中…</div>';
+    try {
+      const res = await fetch(`${API_BASE}/api/profile/${encodeURIComponent(code)}`, {
+        signal: AbortSignal.timeout(12000)
+      });
+      if (!res.ok) { el.innerHTML = '<div class="empty-profile">企業情報を取得できませんでした</div>'; return; }
+      const json = await res.json();
+      if (!json.success || (!json.tokushoku && !json.jigyou)) {
+        el.innerHTML = '<div class="empty-profile">企業情報が見つかりませんでした</div>'; return;
+      }
+      let html = '';
+      if (json.tokushoku) html += `<div class="profile-block"><div class="profile-heading">特色</div><div class="profile-text">${esc(json.tokushoku)}</div></div>`;
+      if (json.jigyou) html += `<div class="profile-block"><div class="profile-heading">${esc(json.jigyou_label||'連結事業')}</div><div class="profile-text">${esc(json.jigyou)}</div></div>`;
+      el.innerHTML = html || '<div class="empty-profile">企業情報が見つかりませんでした</div>';
+    } catch { el.innerHTML = '<div class="empty-profile">企業情報を取得できませんでした</div>'; }
   }
 
   // ============================
