@@ -475,7 +475,7 @@ def fetch_yahoo_ranking(max_stocks=300):
 # ==================================================
 @app.route('/')
 def index():
-    return send_from_directory(BASE_DIR, '高配当株選別ツール.html')
+    return send_from_directory(BASE_DIR, 'index.html')
 
 
 @app.route('/api/name/<code>')
