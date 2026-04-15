@@ -675,18 +675,18 @@
     <p style="font-size:0.85rem;color:#475569;margin-bottom:14px;line-height:1.65">
       <strong>ヤフーファイナンスの配当利回りランキング</strong>上位銘柄をIR BANKで自動チェックし、
       <strong style="color:#15803d">KO項目なし・スコア60点以上・配当利回り3.0%以上</strong>の投資適格銘柄のみを一覧表示します。
-      <br><span style="font-size:0.78rem;color:#94a3b8">※ 件数が多いほど時間がかかります（300銘柄≒4分、1000銘柄≒15分、2000銘柄≒30分）</span>
+      <br><span style="font-size:0.78rem;color:#94a3b8">※ 件数が多いほど時間がかかります（100銘柄≒1分、300銘柄≒4分、1000銘柄≒15分）</span>
     </p>
 
     <!-- 件数選択 -->
     <div style="margin-bottom:14px">
       <div style="font-size:0.8rem;font-weight:700;color:#64748b;margin-bottom:8px">📊 スクリーニング件数を選択：</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap" id="countBtnGroup">
+        <button class="count-btn" data-count="100" onclick="selectCount(this)">100銘柄<span style="font-size:0.7rem;display:block;opacity:0.75">約1分</span></button>
         <button class="count-btn count-btn-active" data-count="300" onclick="selectCount(this)">300銘柄<span style="font-size:0.7rem;display:block;opacity:0.75">約4分</span></button>
         <button class="count-btn" data-count="500" onclick="selectCount(this)">500銘柄<span style="font-size:0.7rem;display:block;opacity:0.75">約7分</span></button>
+        <button class="count-btn" data-count="700" onclick="selectCount(this)">700銘柄<span style="font-size:0.7rem;display:block;opacity:0.75">約10分</span></button>
         <button class="count-btn" data-count="1000" onclick="selectCount(this)">1000銘柄<span style="font-size:0.7rem;display:block;opacity:0.75">約15分</span></button>
-        <button class="count-btn" data-count="1500" onclick="selectCount(this)">1500銘柄<span style="font-size:0.7rem;display:block;opacity:0.75">約22分</span></button>
-        <button class="count-btn" data-count="2000" onclick="selectCount(this)">2000銘柄<span style="font-size:0.7rem;display:block;opacity:0.75">約30分</span></button>
       </div>
     </div>
 
@@ -846,7 +846,14 @@
     items.forEach(([code, name], i) => {
       const div = document.createElement('div');
       div.className = 'ac-item' + (i === 0 ? ' ac-active' : '');
-      div.innerHTML = `<span class="ac-item-name">${name}</span><span class="ac-item-code">${code}</span>`;
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'ac-item-name';
+      nameSpan.textContent = name;
+      const codeSpan = document.createElement('span');
+      codeSpan.className = 'ac-item-code';
+      codeSpan.textContent = code;
+      div.appendChild(nameSpan);
+      div.appendChild(codeSpan);
       div.onmousedown = (e) => { e.preventDefault(); onSelect(code, name); dropdownEl.classList.remove('open'); };
       dropdownEl.appendChild(div);
     });
@@ -1068,7 +1075,7 @@
       const cell = (v, suffix='') => `<td style="text-align:center;font-size:0.78rem">${v ? v + suffix : '—'}</td>`;
       return `<tr>
         <td style="text-align:center;font-weight:700">${idx + 1}</td>
-        <td style="cursor:pointer" onclick="loadFromBulk('${s.code}','${s.name.replace(/'/g,"\\'")}')">
+        <td style="cursor:pointer" data-code="${esc(s.code)}" data-name="${esc(s.name)}" onclick="loadFromBulk(this.dataset.code,this.dataset.name)">
           <div style="font-weight:700;color:#1d4ed8;text-decoration:underline dotted">${s.name}</div>
           <div style="font-size:0.73rem;color:#64748b">${s.code}</div>
           <div style="font-size:0.68rem;color:#0ea5e9;margin-top:2px">📊 クリックで詳細評価</div>
@@ -1568,7 +1575,7 @@
       });
       const json = await res.json();
       if (!json.success) {
-        showFetchStatus('error', '❌ ' + json.error);
+        showFetchStatus('error', '❌ ' + esc(json.error));
         return;
       }
       const d = json.data;
