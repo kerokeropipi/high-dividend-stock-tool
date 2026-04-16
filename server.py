@@ -43,7 +43,7 @@ import requests
 from bs4 import BeautifulSoup
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, origins=['https://high-dividend-stock-tool.onrender.com', 'http://localhost:8080', 'http://127.0.0.1:8080'])
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -83,9 +83,14 @@ def _check_referer(req) -> bool:
     Refererなし（直接アクセスや一部ブラウザ設定）は通過させる。
     """
     referer = req.headers.get('Referer', '')
-    if not referer:
-        return True  # Refererなしは許可（ブラウザのプライバシー設定等）
-    return any(origin in referer for origin in _ALLOWED_ORIGINS)
+    origin = req.headers.get('Origin', '')
+    # Refererもoriginもない場合はlocalhostからのアクセスのみ許可
+    check_str = referer or origin
+    if not check_str:
+        # 開発環境（localhost）からの直接アクセスは許可
+        remote = req.remote_addr or ''
+        return remote in ('127.0.0.1', '::1')
+    return any(o in check_str for o in _ALLOWED_ORIGINS)
 
 # ==================================================
 #  値パーサー  兆・億 → float
@@ -319,16 +324,6 @@ def scrape_irbank(code):
         'cash_trend': cash_trend,
         'dividend_trend': dividend_trend,
         'payout_ratio': payout_ratio,
-        '_debug': {
-            'sales_recent':  [(y, v) for y, v in sales[-5:]  if v is not None],
-            'eps_recent':    [(y, v) for y, v in eps[-5:]    if v is not None],
-            'margin_recent': [(y, v) for y, v in margin[-3:] if v is not None],
-            'equity_recent': [(y, v) for y, v in equity[-3:] if v is not None],
-            'ocf_recent':    [(y, v) for y, v in ocf[-5:]    if v is not None],
-            'cash_recent':   [(y, v) for y, v in cash[-5:]   if v is not None],
-            'div_recent':    [(y, v) for y, v in div[-5:]    if v is not None],
-            'payout_recent': [(y, v) for y, v in payout[-3:] if v is not None],
-        }
     }
 
 
@@ -615,7 +610,7 @@ def get_chart(code):
     if not _check_rate_limit(flask_request.remote_addr):
         return jsonify({'success': False, 'error': 'リクエストが多すぎます。'}), 429
     try:
-        code = re.sub(r'\\s', '', str(code))
+        code = re.sub(r'\s', '', str(code))
         if not _validate_code(code):
             return jsonify({'success': False, 'error': '証券コードは4桁の数字を入力してください。'}), 400
         url = 'https://chart.yahoo.co.jp/?code=' + code + '.T&ct=z&t=6m&q=c&l=on&z=m&a=v'
@@ -654,7 +649,7 @@ def yahoo_ranking():
         return jsonify({'success': False, 'error': 'アクセスが拒否されました。'}), 403
     try:
         count = flask_request.args.get('count', 300, type=int)
-        count = max(50, min(count, 2000))
+        count = max(50, min(count, 1000))
         stocks = fetch_yahoo_ranking(max_stocks=count)
         return jsonify({'success': True, 'stocks': stocks, 'count': len(stocks)})
     except Exception:
