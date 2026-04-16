@@ -1689,15 +1689,44 @@
     }
     const imgUrl  = 'https://chart.yahoo.co.jp/?code=' + encodeURIComponent(code) + '.T&ct=z&t=6m&q=c&l=on&z=m&a=v';
     const linkUrl = 'https://finance.yahoo.co.jp/quote/' + encodeURIComponent(code) + '.T/chart';
-    container.innerHTML =
-      '<div style="text-align:center;padding:4px 0">' +
-        '<img src="' + imgUrl + '" alt="' + code + ' 株価チャート（6ヶ月）"' +
-          ' style="max-width:100%;border-radius:8px;border:1px solid #e2e8f0"' +
-          ' onerror="this.parentElement.innerHTML='<div class=\'chart-placeholder\'>チャートを取得できませんでした。<br><a href=\'https://finance.yahoo.co.jp/quote/' + code + '.T/chart\' target=\'_blank\' rel=\'noopener\'>Yahoo!ファイナンスで確認 →</a></div>'">' +
-        '<div style="margin-top:6px">' +
-          '<a href="' + linkUrl + '" target="_blank" rel="noopener">Yahoo!ファイナンスで詳細チャートを見る →</a>' +
-        '</div>' +
-      '</div>';
+
+    const img = document.createElement('img');
+    img.src = imgUrl;
+    img.alt = code + ' 株価チャート（6ヶ月）';
+    img.style.cssText = 'max-width:100%;border-radius:8px;border:1px solid #e2e8f0';
+    img.onerror = function() {
+      container.innerHTML = '';
+      const msg = document.createElement('div');
+      msg.className = 'chart-placeholder';
+      const a = document.createElement('a');
+      a.href = linkUrl;
+      a.target = '_blank';
+      a.rel = 'noopener';
+      a.textContent = 'Yahoo!ファイナンスで確認 →';
+      msg.appendChild(document.createTextNode('チャートを取得できませんでした。'));
+      msg.appendChild(document.createElement('br'));
+      msg.appendChild(a);
+      container.appendChild(msg);
+    };
+
+    const link = document.createElement('a');
+    link.href = linkUrl;
+    link.target = '_blank';
+    link.rel = 'noopener';
+    link.textContent = 'Yahoo!ファイナンスで詳細チャートを見る →';
+    link.style.cssText = 'font-size:0.78rem;color:#1d4ed8';
+
+    const linkDiv = document.createElement('div');
+    linkDiv.style.marginTop = '6px';
+    linkDiv.appendChild(link);
+
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = 'text-align:center;padding:4px 0';
+    wrapper.appendChild(img);
+    wrapper.appendChild(linkDiv);
+
+    container.innerHTML = '';
+    container.appendChild(wrapper);
   }
 
     // ============================
