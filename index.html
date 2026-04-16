@@ -519,7 +519,67 @@
     .ac-item:hover, .ac-item.ac-active { background: #eff6ff; }
     .ac-item-name { color: #1e293b; font-weight: 500; }
     .ac-item-code { color: #64748b; font-size: 0.78rem; font-family: monospace; background:#f1f5f9; padding:2px 6px; border-radius:5px; }
-  </style>
+  
+    /* ============================
+       モバイル / スマートフォン対応
+       ============================ */
+    @media (max-width: 768px) {
+      /* ヘッダー */
+      .header {
+        padding: 12px 16px;
+        gap: 10px;
+      }
+      .header-icon { font-size: 1.8rem; }
+      .header h1   { font-size: 1.1rem; }
+      .header p    { font-size: 0.73rem; }
+
+      /* レイアウト余白の縮小 */
+      .main { padding: 12px; }
+      .card { padding: 14px 16px; }
+
+      /* フォーム入力：font-size<16pxだとAndroidが自動ズームする */
+      .form-group input,
+      .form-group select,
+      .form-group textarea {
+        font-size: 16px;
+        min-height: 44px;
+      }
+
+      /* 自動取得ボタン行：縦並びに */
+      .fetch-row { flex-direction: column; }
+      .btn-fetch {
+        width: 100%;
+        justify-content: center;
+        min-height: 44px;
+      }
+
+      /* ボタンのタップターゲット確保 */
+      .btn { min-height: 44px; }
+      .btn-sm { min-height: 36px; }
+      .form-actions { flex-wrap: wrap; }
+
+      /* 一括スクリーニングボタン */
+      .btn-bulk { width: 100%; }
+
+      /* 件数ボタン縮小 */
+      .count-btn {
+        min-width: 56px;
+        padding: 6px 10px;
+        font-size: 0.8rem;
+      }
+
+      /* テーブルのタッチスクロール */
+      .table-wrap { -webkit-overflow-scrolling: touch; }
+    }
+
+    /* 極小画面 (400px以下) */
+    @media (max-width: 400px) {
+      .header { padding: 10px 12px; }
+      .header h1 { font-size: 0.95rem; }
+      .main { padding: 8px; }
+      .card { padding: 10px 12px; }
+    }
+</style>
 </head>
 <body>
 
