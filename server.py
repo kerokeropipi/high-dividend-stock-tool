@@ -418,7 +418,7 @@ def fetch_yahoo_ranking(max_stocks=300):
     import math
     max_pages = min(math.ceil(max_stocks / 47) + 3, 100)
     consecutive_empty = 0
-    deadline = time.time() + 25
+    deadline = time.time() + max(30, max_pages * 3)  # ページ数に比例（1000件≒75秒）
 
     for page in range(1, max_pages + 1):
         if len(result) >= max_stocks:
@@ -446,7 +446,7 @@ def fetch_yahoo_ranking(max_stocks=300):
 
             if codes_found == 0:
                 consecutive_empty += 1
-                if consecutive_empty >= 2:
+                if consecutive_empty >= 3:
                     print("  ランキング終端に達しました → 終了")
                     break
             else:
