@@ -683,7 +683,7 @@
 
       <!-- Chart Panel -->
       <div class="card">
-        <div class="card-title">📈 株価チャート <span style="font-size:0.72rem;font-weight:500;color:#64748b;margin-left:4px">powered by TradingView</span></div>
+        <div class="card-title">📈 株価チャート <span style="font-size:0.72rem;font-weight:500;color:#64748b;margin-left:4px">powered by Yahoo!ファイナンス</span></div>
         <div id="tvChartContainer">
           <div class="chart-placeholder">証券コードを入力して「🔄 自動取得」を押すと株価チャートが表示されます</div>
         </div>
@@ -807,7 +807,7 @@
       </div>
     </div>
     <div style="margin-top:14px;padding:11px 14px;background:#f8fafc;border-radius:8px;font-size:0.78rem;color:#64748b;line-height:1.6">
-      ⚠️ <strong>免責事項</strong>：このツールはリベラルアーツ大学の記事を参考にした学習・参考用ツールです。投資判断の最終責任はご自身にあります。投資は必ずご自身で十分に調査・検討の上でご判断ください。
+      ⚠️ <strong>免責事項</strong>：このツールはリベラルアーツ大学の記事を参考にした個人作成の学習・参考用ツールです（リベラルアーツ大学とは無関係の非公式ツールです）。また、IR BANK・Yahoo!ファイナンスのデータをサーバー経由で取得しています。投資判断の最終責任はご自身にあります。投資は必ずご自身で十分に調査・検討の上でご判断ください。
     </div>
   </div>
 
@@ -1054,7 +1054,7 @@
           `確認中: ${stock.code}  ${stock.name}`;
 
         try {
-          const resp = await fetch(`${API_BASE}/api/stock/${stock.code}`);
+          const resp = await fetch(`${API_BASE}/api/stock/${encodeURIComponent(stock.code)}`);
           if (resp.ok) {
             const data = await resp.json();
             if (data.success) {
@@ -1114,8 +1114,8 @@
       return `<tr>
         <td style="text-align:center;font-weight:700">${idx + 1}</td>
         <td style="cursor:pointer" data-code="${esc(s.code)}" data-name="${esc(s.name)}" onclick="loadFromBulk(this.dataset.code,this.dataset.name)">
-          <div style="font-weight:700;color:#1d4ed8;text-decoration:underline dotted">${s.name}</div>
-          <div style="font-size:0.73rem;color:#64748b">${s.code}</div>
+          <div style="font-weight:700;color:#1d4ed8;text-decoration:underline dotted">${esc(s.name)}</div>
+          <div style="font-size:0.73rem;color:#64748b">${esc(s.code)}</div>
           <div style="font-size:0.68rem;color:#0ea5e9;margin-top:2px">📊 クリックで詳細評価</div>
         </td>
         <td style="text-align:center">
@@ -1132,7 +1132,7 @@
         <td style="text-align:center;font-size:0.78rem">${divLbl[s.div] ?? '—'}</td>
         ${cell(s.pr, '%')}
         <td style="text-align:center">
-          <button class="btn-add-stock ${added ? 'added' : ''}" id="addBtn_${s.code}"
+          <button class="btn-add-stock ${added ? 'added' : ''}" id="addBtn_${esc(s.code)}"
             onclick="addBulkStock(${idx})" ${added ? 'disabled' : ''}>
             ${added ? '✅ 追加済' : '＋ 追加'}
           </button>
@@ -1367,8 +1367,8 @@
 
     const nameCodeHtml = (d.name || d.code) ? `
       <div style="width:100%;text-align:center;padding-bottom:10px;border-bottom:1px solid #e2e8f0;margin-bottom:14px">
-        ${d.name ? `<div style="font-size:1.15rem;font-weight:800;color:#1e293b;line-height:1.3">${d.name}</div>` : ''}
-        ${d.code ? `<div style="font-size:0.85rem;color:#64748b;margin-top:2px">証券コード：<span style="font-weight:700;color:#0ea5e9">${d.code}</span></div>` : ''}
+        ${d.name ? `<div style="font-size:1.15rem;font-weight:800;color:#1e293b;line-height:1.3">${esc(d.name)}</div>` : ''}
+        ${d.code ? `<div style="font-size:0.85rem;color:#64748b;margin-top:2px">証券コード：<span style="font-weight:700;color:#0ea5e9">${esc(d.code)}</span></div>` : ''}
       </div>` : '';
 
     panel.innerHTML = `
@@ -1641,7 +1641,7 @@
 
       showFetchStatus('success',
         `<div style="width:100%">` +
-        `<div style="font-weight:700;margin-bottom:8px">✅ <strong>${d.name||code}</strong> のデータを自動入力しました</div>` +
+        `<div style="font-weight:700;margin-bottom:8px">✅ <strong>${esc(d.name||code)}</strong> のデータを自動入力しました</div>` +
         `<table class="debug-table">` +
         `<tr><th>項目</th><th>判定</th><th>直近データ（参考）</th></tr>` +
         `<tr><td>① 売上高</td><td>${tl(d.sales_trend)}</td><td>${fmtPairs(dbg.sales_recent)}</td></tr>` +
