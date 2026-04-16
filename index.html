@@ -46,7 +46,9 @@
     /* Chart */
     .chart-placeholder { color: #94a3b8; font-size: 0.82rem; text-align: center; padding: 28px 0; }
     #tvChartContainer { min-height: 60px; }
-    #tvChartContainer iframe { border-radius: 8px; }
+    #tvChartContainer img { border-radius: 8px; max-width: 100%; display: block; margin: 0 auto; }
+    #tvChartContainer a { font-size: 0.78rem; color: #1d4ed8; text-decoration: none; }
+    #tvChartContainer a:hover { text-decoration: underline; }
 
     /* Card */
     .card {
@@ -681,7 +683,7 @@
 
       <!-- Chart Panel -->
       <div class="card">
-        <div class="card-title">📈 株価チャート <span style="font-size:0.72rem;font-weight:500;color:#64748b;margin-left:4px">powered by TradingView</span></div>
+        <div class="card-title">📈 株価チャート <span style="font-size:0.72rem;font-weight:500;color:#64748b;margin-left:4px">提供: Yahoo!ファイナンス</span></div>
         <div id="tvChartContainer">
           <div class="chart-placeholder">証券コードを入力して「🔄 自動取得」を押すと株価チャートが表示されます</div>
         </div>
@@ -719,11 +721,11 @@
     <div style="margin-bottom:14px">
       <div style="font-size:0.8rem;font-weight:700;color:#64748b;margin-bottom:8px">📊 スクリーニング件数を選択：</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap" id="countBtnGroup">
-        <button class="count-btn" data-count="100" onclick="selectCount(this)">100銘柄<span style="font-size:0.7rem;display:block;opacity:0.75">約1分</span></button>
-        <button class="count-btn count-btn-active" data-count="300" onclick="selectCount(this)">300銘柄<span style="font-size:0.7rem;display:block;opacity:0.75">約4分</span></button>
-        <button class="count-btn" data-count="500" onclick="selectCount(this)">500銘柄<span style="font-size:0.7rem;display:block;opacity:0.75">約7分</span></button>
-        <button class="count-btn" data-count="700" onclick="selectCount(this)">700銘柄<span style="font-size:0.7rem;display:block;opacity:0.75">約10分</span></button>
-        <button class="count-btn" data-count="1000" onclick="selectCount(this)">1000銘柄<span style="font-size:0.7rem;display:block;opacity:0.75">約15分</span></button>
+        <button class="count-btn" data-count="100" onclick="selectCount(this)">100銘柄<span style="font-size:0.7rem;display:block;opacity:0.75">約4〜5分</span></button>
+        <button class="count-btn count-btn-active" data-count="300" onclick="selectCount(this)">300銘柄<span style="font-size:0.7rem;display:block;opacity:0.75">約12〜15分</span></button>
+        <button class="count-btn" data-count="500" onclick="selectCount(this)">500銘柄<span style="font-size:0.7rem;display:block;opacity:0.75">約20〜25分</span></button>
+        <button class="count-btn" data-count="700" onclick="selectCount(this)">700銘柄<span style="font-size:0.7rem;display:block;opacity:0.75">約30分</span></button>
+        <button class="count-btn" data-count="1000" onclick="selectCount(this)">1000銘柄<span style="font-size:0.7rem;display:block;opacity:0.75">約40〜45分</span></button>
       </div>
     </div>
 
@@ -1677,7 +1679,7 @@
   }
 
   // ============================
-  //  株価チャート（TradingView）
+  //  株価チャート（Yahoo!ファイナンス）
   // ============================
   function updateChart(code) {
     const container = document.getElementById('tvChartContainer');
@@ -1685,29 +1687,20 @@
       container.innerHTML = '<div class="chart-placeholder">証券コードを入力して「🔄 自動取得」を押すと株価チャートが表示されます</div>';
       return;
     }
-    const widgetId = 'tv_' + Date.now();
-    container.innerHTML = `<div id="${widgetId}" style="height:400px"></div>`;
-    const symbol = `TYO:de}`;
-    const buildWidget = () => {
-      if (typeof TradingView === 'undefined') return;
-      new TradingView.widget({
-        autosize: true, height: 400, symbol: symbol,
-        interval: 'W', timezone: 'Asia/Tokyo', theme: 'light',
-        style: '1', locale: 'ja', toolbar_bg: '#f1f3f6',
-        enable_publishing: false, hide_side_toolbar: false,
-        allow_symbol_change: false, container_id: widgetId
-      });
-    };
-    if (window.TradingView) { buildWidget(); }
-    else {
-      const s = document.createElement('script');
-      s.src = 'https://s3.tradingview.com/tv.js';
-      s.onload = buildWidget;
-      document.head.appendChild(s);
-    }
+    const imgUrl  = 'https://chart.yahoo.co.jp/?code=' + encodeURIComponent(code) + '.T&ct=z&t=6m&q=c&l=on&z=m&a=v';
+    const linkUrl = 'https://finance.yahoo.co.jp/quote/' + encodeURIComponent(code) + '.T/chart';
+    container.innerHTML =
+      '<div style="text-align:center;padding:4px 0">' +
+        '<img src="' + imgUrl + '" alt="' + code + ' 株価チャート（6ヶ月）"' +
+          ' style="max-width:100%;border-radius:8px;border:1px solid #e2e8f0"' +
+          ' onerror="this.parentElement.innerHTML='<div class=\'chart-placeholder\'>チャートを取得できませんでした。<br><a href=\'https://finance.yahoo.co.jp/quote/' + code + '.T/chart\' target=\'_blank\' rel=\'noopener\'>Yahoo!ファイナンスで確認 →</a></div>'">' +
+        '<div style="margin-top:6px">' +
+          '<a href="' + linkUrl + '" target="_blank" rel="noopener">Yahoo!ファイナンスで詳細チャートを見る →</a>' +
+        '</div>' +
+      '</div>';
   }
 
-  // ============================
+    // ============================
   //  企業情報（Yahoo Finance プロファイル）
   // ============================
   async function fetchProfile(code) {
