@@ -606,6 +606,35 @@ def get_profile(code):
         return jsonify({'success': False, 'error': '企業情報の取得に失敗しました。'}), 500
 
 
+@app.route('/api/chart/<code>')
+def get_chart(code):
+    """Yahoo Finance チャート画像をプロキシして返す"""
+    from flask import request as flask_request, Response
+    if not _check_referer(flask_request):
+        return jsonify({'success': False, 'error': 'アクセスが拒否されました。'}), 403
+    if not _check_rate_limit(flask_request.remote_addr):
+        return jsonify({'success': False, 'error': 'リクエストが多すぎます。'}), 429
+    try:
+        code = re.sub(r'\\s', '', str(code))
+        if not _validate_code(code):
+            return jsonify({'success': False, 'error': '証券コードは4桁の数字を入力してください。'}), 400
+        url = 'https://chart.yahoo.co.jp/?code=' + code + '.T&ct=z&t=6m&q=c&l=on&z=m&a=v'
+        headers = {
+            'User-Agent': ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
+                           'AppleWebKit/537.36 (KHTML, like Gecko) '
+                           'Chrome/124.0.0.0 Safari/537.36'),
+            'Referer': 'https://finance.yahoo.co.jp/quote/' + code + '.T/chart',
+            'Accept': 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8',
+        }
+        resp = requests.get(url, headers=headers, timeout=10)
+        resp.raise_for_status()
+        content_type = resp.headers.get('Content-Type', 'image/gif')
+        return Response(resp.content, content_type=content_type,
+                        headers={'Cache-Control': 'public, max-age=3600'})
+    except Exception:
+        return jsonify({'success': False, 'error': 'チャート画像の取得に失敗しました。'}), 502
+
+
 @app.route('/api/dividend_ranking')
 def dividend_ranking():
     from flask import request as flask_request
