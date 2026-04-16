@@ -1664,13 +1664,13 @@
       if (err.name === 'TimeoutError' || err.name === 'AbortError') {
         showFetchStatus('error',
           '⏱ タイムアウト。<code>python server.py</code> が起動しているか確認し、' +
-          '<a href="' + lh + '" target="_blank" style="color:#1d4ed8">' + lh + '</a> で開いてください。'
+          '<a href="http://localhost:8080" target="_blank" style="color:#1d4ed8">http://localhost:8080</a> で開いてください。'
         );
       } else {
         showFetchStatus('error',
           '❌ サーバーに接続できません。<br>' +
           '同じフォルダで <code>python server.py</code> を実行してから、' +
-          '<a href="' + lh + '" target="_blank" style="color:#1d4ed8">' + lh + '</a> で開いてください。'
+          '<a href="http://localhost:8080" target="_blank" style="color:#1d4ed8">http://localhost:8080</a> で開いてください。'
         );
       }
     } finally {
@@ -1681,6 +1681,18 @@
     // ============================
   //  企業情報（Yahoo Finance プロファイル）
   // ============================
+  // ============================
+  //  株価チャート
+  // ============================
+  function updateChart(code) {
+    const container = document.getElementById('tvChartContainer');
+    if (!code) {
+      container.innerHTML = '<div class="chart-placeholder">証券コードを入力して「🔄 自動取得」を押すと株価チャートが表示されます</div>';
+      return;
+    }
+    const url = 'https://finance.yahoo.co.jp/quote/' + encodeURIComponent(code) + '.T/chart';
+    container.innerHTML = '<div style="padding:12px 4px"><a href="' + url + '" target="_blank" rel="noopener" style="color:#1d4ed8;font-size:0.9rem;font-weight:600">📈 Yahoo!ファイナンスでチャートを見る →</a></div>';
+  }
   async function fetchProfile(code) {
     const el = document.getElementById('companyProfile');
     el.innerHTML = '<div class="profile-loading"><div class="fetch-spinner" style="width:14px;height:14px;border-width:2px"></div>企業情報を取得中…</div>';
