@@ -1687,7 +1687,7 @@
       container.innerHTML = '<div class="chart-placeholder">証券コードを入力して「🔄 自動取得」を押すと株価チャートが表示されます</div>';
       return;
     }
-    const imgUrl  = 'https://chart.yahoo.co.jp/?code=' + encodeURIComponent(code) + '.T&ct=z&t=6m&q=c&l=on&z=m&a=v';
+    const imgUrl  = API_BASE + '/api/chart/' + encodeURIComponent(code);
     const linkUrl = 'https://finance.yahoo.co.jp/quote/' + encodeURIComponent(code) + '.T/chart';
 
     const img = document.createElement('img');
