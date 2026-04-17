@@ -832,9 +832,17 @@
   </div>
   <div id="imgPreviewWrap" style="display:none;margin-top:12px"><img id="imgPreview" style="max-width:100%;max-height:240px;border-radius:8px;border:1px solid #e2e8f0;display:block"></div>
   <div id="imgExtractStatus" style="display:none;margin-top:12px;padding:10px 14px;background:#eff6ff;border-radius:8px;font-size:0.85rem;color:#1d4ed8">🔍 証券コードを読み取り中…</div>
+  <div style="text-align:right;margin-top:6px"><button onclick="window._imgCodes=window._imgCodes||[];document.getElementById('imgCodesWrap').style.display='';imgRenderCodes();" style="background:none;border:none;color:#7c3aed;font-size:0.8rem;cursor:pointer;text-decoration:underline;padding:0">✏️ コードを手動で入力する</button></div>
   <div id="imgCodesWrap" style="display:none;margin-top:14px">
-    <div style="font-size:0.82rem;color:#64748b;margin-bottom:8px;font-weight:600">読み取り結果：</div>
-    <div id="imgCodesList" style="margin-bottom:12px"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div style="font-size:0.82rem;color:#64748b;font-weight:600">読み取り結果：</div>
+      <div id="imgCodesCount" style="font-size:0.78rem;color:#94a3b8"></div>
+    </div>
+    <div id="imgCodesList" style="margin-bottom:10px"></div>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <input id="imgManualInput" type="text" maxlength="4" placeholder="証券コード（4桁）" style="flex:1;padding:8px 12px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:0.88rem;outline:none;transition:border-color 0.2s" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+      <button onclick="imgManualAdd()" style="background:#0f172a;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:0.85rem;font-weight:700;cursor:pointer;white-space:nowrap">＋ 追加</button>
+    </div>
     <button id="imgRunBtn" onclick="imgRunScores()" style="background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;border:none;padding:11px 22px;border-radius:10px;font-size:0.9rem;font-weight:700;cursor:pointer;width:100%;transition:opacity 0.2s">📊 スコアを一括計算する</button>
   </div>
   <div id="imgScanProgress" style="display:none;margin-top:14px">
@@ -1880,19 +1888,63 @@ window.imgHandleFile=function(file){
         if(n>=1000&&n<=9999&&!seen[matches[i]]){seen[matches[i]]=true;codes.push(matches[i]);}
       }
       window._imgCodes=codes;
-      var list=document.getElementById('imgCodesList');
-      if(codes.length){
-        list.innerHTML=codes.map(function(c){return '<span style="display:inline-block;background:#ede9fe;color:#5b21b6;padding:3px 10px;border-radius:6px;margin:3px;font-size:0.85rem;font-weight:700">'+c+'</span>';}).join('');
-        document.getElementById('imgRunBtn').style.display='';
-      }else{
-        list.innerHTML='<span style="color:#ef4444;font-size:0.85rem">証券コードが見つかりませんでした。別の画像を試してください。</span>';
-        document.getElementById('imgRunBtn').style.display='none';
-      }
+      imgRenderCodes();
       document.getElementById('imgCodesWrap').style.display='';
     }).catch(function(err){statusEl.style.display='none';alert('読み取りエラー: '+err.message);});
   };
   reader.readAsDataURL(file);
 };
+
+var IMG_MAX_CODES=50;
+
+window.imgRenderCodes=function(){
+  var codes=window._imgCodes||[];
+  var list=document.getElementById('imgCodesList');
+  var countEl=document.getElementById('imgCodesCount');
+  if(countEl)countEl.textContent=codes.length+' / '+IMG_MAX_CODES+' 件';
+  if(codes.length){
+    list.innerHTML=codes.map(function(c){
+      return '<span style="background:#ede9fe;color:#5b21b6;padding:3px 4px 3px 10px;border-radius:6px;margin:3px;font-size:0.85rem;font-weight:700;display:inline-flex;align-items:center;gap:4px">'+c+
+        '<button onclick="imgRemoveCode(''+c+'')" style="background:none;border:none;cursor:pointer;color:#7c3aed;font-size:1rem;line-height:1;padding:0 2px;font-weight:900" title="削除">×</button></span>';
+    }).join('');
+    document.getElementById('imgRunBtn').style.display='';
+  }else{
+    list.innerHTML='<span style="color:#ef4444;font-size:0.85rem">証券コードが見つかりませんでした。下の入力欄から手動で追加できます。</span>';
+    document.getElementById('imgRunBtn').style.display='none';
+  }
+  var inp=document.getElementById('imgManualInput');
+  if(inp){inp.disabled=(codes.length>=IMG_MAX_CODES);inp.style.opacity=(codes.length>=IMG_MAX_CODES)?'0.5':'1';}
+};
+
+window.imgRemoveCode=function(code){
+  window._imgCodes=(window._imgCodes||[]).filter(function(c){return c!==code;});
+  imgRenderCodes();
+};
+
+window.imgManualAdd=function(){
+  var inp=document.getElementById('imgManualInput');
+  if(!inp)return;
+  var val=inp.value.trim();
+  if(!/^\d{4}$/.test(val)){inp.style.borderColor='#ef4444';setTimeout(function(){inp.style.borderColor='#cbd5e1';},1000);return;}
+  var n=parseInt(val);
+  if(n<1000||n>9999){inp.style.borderColor='#ef4444';setTimeout(function(){inp.style.borderColor='#cbd5e1';},1000);return;}
+  var codes=window._imgCodes||[];
+  if(codes.length>=IMG_MAX_CODES){alert('最大'+IMG_MAX_CODES+'件まで追加できます。');return;}
+  if(codes.indexOf(val)>=0){inp.style.borderColor='#f59e0b';setTimeout(function(){inp.style.borderColor='#cbd5e1';},1000);inp.value='';return;}
+  codes.push(val);
+  window._imgCodes=codes;
+  inp.value='';
+  inp.style.borderColor='#22c55e';
+  setTimeout(function(){inp.style.borderColor='#cbd5e1';},600);
+  document.getElementById('imgCodesWrap').style.display='';
+  imgRenderCodes();
+};
+
+document.addEventListener('keydown',function(e){
+  if(e.key==='Enter'&&document.activeElement&&document.activeElement.id==='imgManualInput'){
+    e.preventDefault();imgManualAdd();
+  }
+});
 
 window.imgRunScores=function(){
   var codes=window._imgCodes||[];if(!codes.length)return;
