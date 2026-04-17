@@ -1905,7 +1905,7 @@ window.imgRenderCodes=function(){
   if(codes.length){
     list.innerHTML=codes.map(function(c){
       return '<span style="background:#ede9fe;color:#5b21b6;padding:3px 4px 3px 10px;border-radius:6px;margin:3px;font-size:0.85rem;font-weight:700;display:inline-flex;align-items:center;gap:4px">'+c+
-        '<button onclick="imgRemoveCode(''+c+'')" style="background:none;border:none;cursor:pointer;color:#7c3aed;font-size:1rem;line-height:1;padding:0 2px;font-weight:900" title="削除">×</button></span>';
+        '<button data-rmcode="'+c+'" onclick="imgRemoveCode(this.dataset.rmcode)" style="background:none;border:none;cursor:pointer;color:#7c3aed;font-size:1rem;line-height:1;padding:0 2px;font-weight:900" title="削除">×</button></span>';
     }).join('');
     document.getElementById('imgRunBtn').style.display='';
   }else{
