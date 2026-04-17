@@ -633,7 +633,7 @@
           <input type="text" id="f_sector" placeholder="例：通信" />
         </div>
 
-        <div class="section-label">📊 IR BANK 8項目チェック</div>
+        <div class="section-label" style="display:flex;justify-content:space-between;align-items:center"><span>📊 IR BANK 8項目チェック</span><a id="irbankLink" href="#" target="_blank" rel="noopener" style="display:none;color:#1d4ed8;font-size:0.8rem;font-weight:700;text-decoration:none">📊 IRBANKで確認 →</a></div>
 
         <div class="form-group">
           <label>① 売上高トレンド <span class="max-pts">最大10pt</span></label>
@@ -1778,6 +1778,25 @@
 
   // Initial render
   renderList();
+
+  // IR BANKリンク更新
+  (function() {
+    function updIRBankLink() {
+      var c = (document.getElementById('f_code') || {}).value || '';
+      var a = document.getElementById('irbankLink');
+      if (!a) return;
+      c = c.trim();
+      if (c) {
+        a.href = 'https://irbank.net/' + encodeURIComponent(c);
+        a.style.display = '';
+      } else {
+        a.style.display = 'none';
+      }
+    }
+    var inp = document.getElementById('f_code');
+    if (inp) inp.addEventListener('input', updIRBankLink);
+    setInterval(updIRBankLink, 500);
+  })();
 </script>
 </body>
 </html>
