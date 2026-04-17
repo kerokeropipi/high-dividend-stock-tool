@@ -900,6 +900,7 @@
 
 </div><!-- /main -->
 
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script>
   // ============================
   //  Stock lookup map (銘柄名 ↔ 証券コード)
@@ -1858,24 +1859,37 @@ window.imgHandleFile=function(file){
     document.getElementById('imgCodesWrap').style.display='none';
     document.getElementById('imgResultsWrap').style.display='none';
     document.getElementById('imgScanProgress').style.display='none';
-    document.getElementById('imgExtractStatus').style.display='';
-    fetch('/api/scan-image',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({image:dataUrl,mimeType:file.type||'image/png'})
-    }).then(function(r){return r.json();})
-    .then(function(res){
-      document.getElementById('imgExtractStatus').style.display='none';
-      if(!res.success){alert('エラー: '+res.error);return;}
-      window._imgCodes=res.codes;
+    var statusEl=document.getElementById('imgExtractStatus');
+    statusEl.style.display='';
+    statusEl.innerHTML='🔍 画像を解析中… <span id="imgOcrPct">0</span>%（初回は少し時間がかかります）';
+    Tesseract.recognize(dataUrl,'jpn+eng',{
+      logger:function(m){
+        if(m.status==='recognizing text'){
+          var pct=document.getElementById('imgOcrPct');
+          if(pct)pct.textContent=Math.round(m.progress*100);
+        }
+      }
+    }).then(function(result){
+      statusEl.style.display='none';
+      var text=result.data.text;
+      var matches=text.match(/\b\d{4}\b/g)||[];
+      var seen={};
+      var codes=[];
+      for(var i=0;i<matches.length;i++){
+        var n=parseInt(matches[i]);
+        if(n>=1000&&n<=9999&&!seen[matches[i]]){seen[matches[i]]=true;codes.push(matches[i]);}
+      }
+      window._imgCodes=codes;
       var list=document.getElementById('imgCodesList');
-      if(res.codes.length){
-        list.innerHTML=res.codes.map(function(c){return '<span style="display:inline-block;background:#ede9fe;color:#5b21b6;padding:3px 10px;border-radius:6px;margin:3px;font-size:0.85rem;font-weight:700">'+c+'</span>';}).join('');
+      if(codes.length){
+        list.innerHTML=codes.map(function(c){return '<span style="display:inline-block;background:#ede9fe;color:#5b21b6;padding:3px 10px;border-radius:6px;margin:3px;font-size:0.85rem;font-weight:700">'+c+'</span>';}).join('');
         document.getElementById('imgRunBtn').style.display='';
       }else{
         list.innerHTML='<span style="color:#ef4444;font-size:0.85rem">証券コードが見つかりませんでした。別の画像を試してください。</span>';
         document.getElementById('imgRunBtn').style.display='none';
       }
       document.getElementById('imgCodesWrap').style.display='';
-    }).catch(function(err){document.getElementById('imgExtractStatus').style.display='none';alert('通信エラー: '+err.message);});
+    }).catch(function(err){statusEl.style.display='none';alert('読み取りエラー: '+err.message);});
   };
   reader.readAsDataURL(file);
 };
