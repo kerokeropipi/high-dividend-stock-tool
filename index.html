@@ -585,7 +585,7 @@
 <body>
 
 <div class="header">
-  <div class="header-icon">📈</div>
+  <div class="header-icon">🐸</div>
   <div>
     <h1>🐸高配当株 選別ツール🐸</h1>
     <p>8項目基準でスコアリング・比較 — 日本株専用 &nbsp;|&nbsp; 証券コードを入力するだけで IR BANK から自動取得</p>
@@ -752,7 +752,7 @@
 
     <p style="font-size:0.85rem;color:#475569;margin-bottom:14px;line-height:1.65">
       <strong>ヤフーファイナンスの配当利回りランキング</strong>上位銘柄をIR BANKで自動チェックし、
-      <strong style="color:#15803d">KO項目なし・スコア60点以上・配当利回り3.0%以上</strong>の投資適格銘柄のみを一覧表示します。
+      <strong style="color:#15803d">KO項目なし・スコア70点以上・配当利回り3.0%以上</strong>の投資適格銘柄のみを一覧表示します。
       <br><span style="font-size:0.78rem;color:#94a3b8">※ 件数が多いほど時間がかかります（100銘柄≒5分、300銘柄≒15分、1000銘柄≒45分）</span>
     </p>
 
@@ -1114,7 +1114,7 @@
               const form   = apiToForm(data.data);
               const result = calcScore(form);
               const yieldOk = !form.yield_ || parseFloat(form.yield_) >= 3.0;
-              if (result.kos.length === 0 && result.total >= 60 && yieldOk) {
+              if (result.kos.length === 0 && result.total >= 70 && yieldOk) {
                 qualifiedList.push({ ...form, result });
                 renderBulkTable();
               }
