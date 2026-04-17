@@ -680,6 +680,70 @@ def get_stock(code):
         return jsonify({'success': False, 'error': 'データの取得に失敗しました。しばらくしてから再試行してください。'}), 500
 
 
+
+@app.route('/api/scan-image', methods=['POST'])
+def api_scan_image():
+    """画像から証券コードを抽出（Claude vision API使用）"""
+    from flask import request as flask_request
+    if not _check_referer(flask_request):
+        return jsonify({'success': False, 'error': 'アクセスが拒否されました。'}), 403
+
+    api_key = os.environ.get('ANTHROPIC_API_KEY')
+    if not api_key:
+        return jsonify({'success': False, 'error': 'ANTHROPIC_API_KEY が設定されていません。Render の環境変数に追加してください。'}), 500
+
+    try:
+        import anthropic as _anthropic
+    except ImportError:
+        return jsonify({'success': False, 'error': 'anthropic パッケージがインストールされていません。'}), 500
+
+    data = flask_request.get_json(force=True, silent=True) or {}
+    image_data = data.get('image', '')
+    mime_type  = data.get('mimeType', 'image/png')
+
+    if not image_data:
+        return jsonify({'success': False, 'error': '画像データがありません。'}), 400
+
+    if ',' in image_data:
+        image_data = image_data.split(',', 1)[1]
+
+    valid_types = {'image/png', 'image/jpeg', 'image/gif', 'image/webp'}
+    if mime_type not in valid_types:
+        mime_type = 'image/png'
+
+    model = os.environ.get('CLAUDE_MODEL', 'claude-opus-4-5')
+
+    try:
+        client = _anthropic.Anthropic(api_key=api_key)
+        response = client.messages.create(
+            model=model,
+            max_tokens=512,
+            messages=[{
+                'role': 'user',
+                'content': [
+                    {
+                        'type': 'image',
+                        'source': {
+                            'type': 'base64',
+                            'media_type': mime_type,
+                            'data': image_data
+                        }
+                    },
+                    {
+                        'type': 'text',
+                        'text': 'この画像に含まれる日本株の証券コード（4桁の数字）をすべて抽出してください。証券コードのみをカンマ区切りで返してください。他の説明は不要です。例: 1234,5678,9012'
+                    }
+                ]
+            }]
+        )
+        text = response.content[0].text.strip()
+        codes = [c.strip() for c in re.split(r'[,\s\n]+', text)
+                 if c.strip().isdigit() and len(c.strip()) == 4]
+        return jsonify({'success': True, 'codes': codes})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
 # ==================================================
 #  起動
 # ==================================================
