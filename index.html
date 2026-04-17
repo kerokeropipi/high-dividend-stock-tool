@@ -1920,8 +1920,8 @@ window.imgHandleFile=function(file){
             var num=parseInt(m,10);
             if(num>=1000&&num<=9999&&!seen[m]){seen[m]=1;codes.push(m);}
           });
-var IMG_MAX_CODES=50;
-          codes=codes.slice(0,IMG_MAX_CODES);
+var 50=50;
+          codes=codes.slice(0,50);
           window._imgCodes=codes;
           imgRenderCodes();
           if(statusEl)statusEl.textContent=codes.length>0?codes.length+'件 読み取りました':'読み取れませんでした。手動で入力してください。';
@@ -1938,7 +1938,7 @@ window.imgRenderCodes=function(){
   var codes=window._imgCodes||[];
   var list=document.getElementById('imgCodesList');
   var countEl=document.getElementById('imgCodesCount');
-  if(countEl)countEl.textContent=codes.length+' / '+IMG_MAX_CODES+' 件';
+  if(countEl)countEl.textContent=codes.length+' / '+50+' 件';
   if(codes.length){
     list.innerHTML=codes.map(function(c){
       return '<span style="background:#ede9fe;color:#5b21b6;padding:3px 4px 3px 10px;border-radius:6px;margin:3px;font-size:0.85rem;font-weight:700;display:inline-flex;align-items:center;gap:4px">'+c+
@@ -1950,7 +1950,7 @@ window.imgRenderCodes=function(){
     document.getElementById('imgRunBtn').style.display='none';
   }
   var inp=document.getElementById('imgManualInput');
-  if(inp){inp.disabled=(codes.length>=IMG_MAX_CODES);inp.style.opacity=(codes.length>=IMG_MAX_CODES)?'0.5':'1';}
+  if(inp){inp.disabled=(codes.length>=50);inp.style.opacity=(codes.length>=50)?'0.5':'1';}
 };
 
 window.imgRemoveCode=function(code){
@@ -1966,7 +1966,7 @@ window.imgManualAdd=function(){
   var n=parseInt(val);
   if(n<1000||n>9999){inp.style.borderColor='#ef4444';setTimeout(function(){inp.style.borderColor='#cbd5e1';},1000);return;}
   var codes=window._imgCodes||[];
-  if(codes.length>=IMG_MAX_CODES){alert('最大'+IMG_MAX_CODES+'件まで追加できます。');return;}
+  if(codes.length>=50){alert('最大'+50+'件まで追加できます。');return;}
   if(codes.indexOf(val)>=0){inp.style.borderColor='#f59e0b';setTimeout(function(){inp.style.borderColor='#cbd5e1';},1000);inp.value='';return;}
   codes.push(val);
   window._imgCodes=codes;
