@@ -1920,6 +1920,7 @@ window.imgHandleFile=function(file){
             var num=parseInt(m,10);
             if(num>=1000&&num<=9999&&!seen[m]){seen[m]=1;codes.push(m);}
           });
+var IMG_MAX_CODES=50;
           codes=codes.slice(0,IMG_MAX_CODES);
           window._imgCodes=codes;
           imgRenderCodes();
