@@ -1869,28 +1869,40 @@ window.imgHandleFile=function(file){
     document.getElementById('imgScanProgress').style.display='none';
     var statusEl=document.getElementById('imgExtractStatus');
     statusEl.style.display='';
-    statusEl.innerHTML='🔍 画像を解析中… <span id="imgOcrPct">0</span>%（初回は少し時間がかかります）';
-    Tesseract.recognize(dataUrl,'jpn+eng',{
-      logger:function(m){
-        if(m.status==='recognizing text'){
-          var pct=document.getElementById('imgOcrPct');
-          if(pct)pct.textContent=Math.round(m.progress*100);
-        }
-      }
-    }).then(function(result){
-      statusEl.style.display='none';
-      var text=result.data.text;
-      var matches=text.match(/\b\d{4}\b/g)||[];
-      var seen={};
-      var codes=[];
-      for(var i=0;i<matches.length;i++){
-        var n=parseInt(matches[i]);
-        if(n>=1000&&n<=9999&&!seen[matches[i]]){seen[matches[i]]=true;codes.push(matches[i]);}
-      }
-      window._imgCodes=codes;
-      imgRenderCodes();
-      document.getElementById('imgCodesWrap').style.display='';
-    }).catch(function(err){statusEl.style.display='none';alert('読み取りエラー: '+err.message);});
+    statusEl.innerHTML='🔍 画像を前処理中…';
+    var img=new Image();
+    img.onload=function(){
+      var canvas=document.createElement('canvas');
+      var scale=Math.min(3,2400/Math.max(img.width,img.height));
+      canvas.width=img.width*scale;
+      canvas.height=img.height*scale;
+      var ctx=canvas.getContext('2d');
+      ctx.filter='grayscale(1) contrast(2) brightness(1.1)';
+      ctx.drawImage(img,0,0,canvas.width,canvas.height);
+      var id=ctx.getImageData(0,0,canvas.width,canvas.height);
+      var d=id.data;
+      for(var i=0;i<d.length;i+=4){var v=d[i]<140?0:255;d[i]=d[i+1]=d[i+2]=v;}
+      ctx.putImageData(id,0,0);
+      var processed=canvas.toDataURL('image/png');
+      statusEl.innerHTML='🔍 数字を認識中… <span id="imgOcrPct">0</span>%';
+      Tesseract.recognize(processed,'eng',{
+        logger:function(m){
+          if(m.status==='recognizing text'){var pct=document.getElementById('imgOcrPct');if(pct)pct.textContent=Math.round(m.progress*100);}
+        },
+        tessedit_char_whitelist:'0123456789',
+        tessedit_pageseg_mode:'11'
+      }).then(function(result){
+        statusEl.style.display='none';
+        var text=result.data.text;
+        var matches=text.match(/\d{4}/g)||[];
+        var seen={};var codes=[];
+        for(var i=0;i<matches.length;i++){var n=parseInt(matches[i]);if(n>=1000&&n<=9999&&!seen[matches[i]]){seen[matches[i]]=true;codes.push(matches[i]);}}
+        window._imgCodes=codes;
+        imgRenderCodes();
+        document.getElementById('imgCodesWrap').style.display='';
+      }).catch(function(err){statusEl.style.display='none';alert('読み取りエラー: '+err.message);});
+    };
+    img.src=dataUrl;
   };
   reader.readAsDataURL(file);
 };
