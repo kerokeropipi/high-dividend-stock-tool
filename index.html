@@ -1862,53 +1862,62 @@ window.imgHandleFile=function(file){
   var reader=new FileReader();
   reader.onload=function(e){
     var dataUrl=e.target.result;
-    document.getElementById('imgPreview').src=dataUrl;
-    document.getElementById('imgPreviewWrap').style.display='';
-    document.getElementById('imgCodesWrap').style.display='none';
-    document.getElementById('imgResultsWrap').style.display='none';
-    document.getElementById('imgScanProgress').style.display='none';
+    var prev=document.getElementById('imgPreview');
+    if(prev){prev.src=dataUrl;prev.style.display='block';}
+    document.getElementById('imgCodesWrap').style.display='block';
     var statusEl=document.getElementById('imgExtractStatus');
-    statusEl.style.display='';
-    statusEl.innerHTML='🔍 画像を前処理中…';
+    if(statusEl)statusEl.textContent='読み取り中...';
     var img=new Image();
     img.onload=function(){
       var canvas=document.createElement('canvas');
-      var scale=Math.min(3,2400/Math.max(img.width,img.height));
-      canvas.width=img.width*scale;
-      canvas.height=img.height*scale;
+      var long=Math.max(img.width,img.height,1);
+      var scale=long<1500?Math.min(4,1500/long):1;
+      canvas.width=Math.round(img.width*scale);
+      canvas.height=Math.round(img.height*scale);
       var ctx=canvas.getContext('2d');
-      ctx.filter='grayscale(1) contrast(2) brightness(1.1)';
       ctx.drawImage(img,0,0,canvas.width,canvas.height);
       var id=ctx.getImageData(0,0,canvas.width,canvas.height);
-      var d=id.data;
-      for(var i=0;i<d.length;i+=4){var v=d[i]<140?0:255;d[i]=d[i+1]=d[i+2]=v;}
+      var d=id.data,sum=0,n=d.length/4;
+      for(var p=0;p<d.length;p+=4){
+        var g=Math.round(0.299*d[p]+0.587*d[p+1]+0.114*d[p+2]);
+        d[p]=d[p+1]=d[p+2]=g;
+        sum+=g;
+      }
+      var mean=sum/n;
+      var thr=Math.max(100,mean*0.85);
+      for(var q=0;q<d.length;q+=4){
+        var v=d[q]<thr?0:255;
+        d[q]=d[q+1]=d[q+2]=v;
+      }
       ctx.putImageData(id,0,0);
-      var processed=canvas.toDataURL('image/png');
-      statusEl.innerHTML='🔍 数字を認識中… <span id="imgOcrPct">0</span>%';
-      Tesseract.recognize(processed,'eng',{
-        logger:function(m){
-          if(m.status==='recognizing text'){var pct=document.getElementById('imgOcrPct');if(pct)pct.textContent=Math.round(m.progress*100);}
-        },
-        tessedit_char_whitelist:'0123456789',
-        tessedit_pageseg_mode:'11'
-      }).then(function(result){
-        statusEl.style.display='none';
-        var text=result.data.text;
-        var matches=text.match(/\d{4}/g)||[];
-        var seen={};var codes=[];
-        for(var i=0;i<matches.length;i++){var n=parseInt(matches[i]);if(n>=1000&&n<=9999&&!seen[matches[i]]){seen[matches[i]]=true;codes.push(matches[i]);}}
-        window._imgCodes=codes;
-        imgRenderCodes();
-        document.getElementById('imgCodesWrap').style.display='';
-      }).catch(function(err){statusEl.style.display='none';alert('読み取りエラー: '+err.message);});
+      Tesseract.createWorker('eng').then(function(worker){
+        return worker.setParameters({
+          tessedit_char_whitelist:'0123456789',
+          tessedit_pageseg_mode:'11'
+        }).then(function(){
+          return worker.recognize(canvas);
+        }).then(function(result){
+          worker.terminate();
+          var text=result.data.text;
+          var matches=text.match(/\d{4}/g)||[];
+          var seen={};var codes=[];
+          matches.forEach(function(m){
+            var num=parseInt(m,10);
+            if(num>=1000&&num<=9999&&!seen[m]){seen[m]=1;codes.push(m);}
+          });
+          codes=codes.slice(0,IMG_MAX_CODES);
+          window._imgCodes=codes;
+          imgRenderCodes();
+          if(statusEl)statusEl.textContent=codes.length>0?codes.length+'件 読み取りました':'読み取れませんでした。手動で入力してください。';
+        });
+      }).catch(function(err){
+        if(statusEl)statusEl.textContent='エラー: '+err.message;
+      });
     };
     img.src=dataUrl;
   };
   reader.readAsDataURL(file);
 };
-
-var IMG_MAX_CODES=50;
-
 window.imgRenderCodes=function(){
   var codes=window._imgCodes||[];
   var list=document.getElementById('imgCodesList');
