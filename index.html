@@ -821,7 +821,41 @@
   </div>
 
   <!-- Bulk Screening -->
-  <div class="card mb-22">
+  
+<div class="card span-2" id="imageScanCard">
+  <div class="card-title">📷 スクショから一括スキャン</div>
+  <p style="font-size:0.85rem;color:#475569;margin-bottom:14px">錠柄一覧のスクリーンショットを貼り付け（Ctrl+V）または選択すると、証券コードを自動読み取りしてスコアを一括表示します</p>
+  <div id="imgDropZone" style="border:2px dashed #cbd5e1;border-radius:12px;padding:28px 20px;text-align:center;cursor:pointer;transition:border-color 0.2s,background 0.2s;background:#f8fafc" onclick="document.getElementById('imgFileInput').click()">
+    <div style="font-size:2.2rem">📷</div>
+    <div style="color:#64748b;font-size:0.88rem;margin-top:8px;line-height:1.6">クリックして画像を選択 / <strong>Ctrl+V</strong> で貼り付け / ドラッグ＆ドロップ</div>
+    <input id="imgFileInput" type="file" accept="image/*" style="display:none" onchange="imgHandleFile(this.files[0])">
+  </div>
+  <div id="imgPreviewWrap" style="display:none;margin-top:12px"><img id="imgPreview" style="max-width:100%;max-height:240px;border-radius:8px;border:1px solid #e2e8f0;display:block"></div>
+  <div id="imgExtractStatus" style="display:none;margin-top:12px;padding:10px 14px;background:#eff6ff;border-radius:8px;font-size:0.85rem;color:#1d4ed8">🔍 証券コードを読み取り中…</div>
+  <div id="imgCodesWrap" style="display:none;margin-top:14px">
+    <div style="font-size:0.82rem;color:#64748b;margin-bottom:8px;font-weight:600">読み取り結果：</div>
+    <div id="imgCodesList" style="margin-bottom:12px"></div>
+    <button id="imgRunBtn" onclick="imgRunScores()" style="background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;border:none;padding:11px 22px;border-radius:10px;font-size:0.9rem;font-weight:700;cursor:pointer;width:100%;transition:opacity 0.2s">📊 スコアを一括計算する</button>
+  </div>
+  <div id="imgScanProgress" style="display:none;margin-top:14px">
+    <div style="background:#e2e8f0;border-radius:999px;height:8px;overflow:hidden"><div id="imgProgressFill" style="background:linear-gradient(90deg,#7c3aed,#4f46e5);height:100%;width:0%;transition:width 0.3s ease"></div></div>
+    <div id="imgProgressMsg" style="font-size:0.82rem;color:#64748b;margin-top:6px"></div>
+  </div>
+  <div id="imgResultsWrap" style="display:none;margin-top:16px">
+    <div id="imgResultsTitle" style="font-size:0.85rem;font-weight:700;color:#0f172a;margin-bottom:8px"></div>
+    <div class="table-wrap"><table style="width:100%;border-collapse:collapse;font-size:0.84rem">
+      <thead><tr style="background:#f1f5f9">
+        <th style="padding:8px 10px;text-align:left;font-weight:700;color:#475569;white-space:nowrap">コード</th>
+        <th style="padding:8px 10px;text-align:left;font-weight:700;color:#475569">錠柄名</th>
+        <th style="padding:8px 10px;text-align:center;font-weight:700;color:#475569">スコア</th>
+        <th style="padding:8px 10px;text-align:center;font-weight:700;color:#475569">KO数</th>
+        <th style="padding:8px 10px;text-align:right;font-weight:700;color:#475569;white-space:nowrap">配当利回り</th>
+      </tr></thead>
+      <tbody id="imgResultsBody"></tbody>
+    </table></div>
+  </div>
+</div>
+<div class="card mb-22">
     <div class="card-title">
       📋 銘柄比較リスト
       <span class="count-badge" id="stockCount">0</span>
@@ -1798,6 +1832,99 @@
     if (inp) inp.addEventListener('input', updIRBankLink);
     setInterval(updIRBankLink, 500);
   })();
+
+// ====== Image Scan Feature ======
+(function(){
+  document.addEventListener('paste',function(e){
+    var items=(e.clipboardData||{}).items||[];
+    for(var i=0;i<items.length;i++){if(items[i].type.startsWith('image/')){imgHandleFile(items[i].getAsFile());break;}}
+  });
+  var dz=document.getElementById('imgDropZone');
+  if(dz){
+    dz.addEventListener('dragover',function(e){e.preventDefault();dz.style.borderColor='#7c3aed';dz.style.background='#f5f3ff';});
+    dz.addEventListener('dragleave',function(){dz.style.borderColor='#cbd5e1';dz.style.background='#f8fafc';});
+    dz.addEventListener('drop',function(e){e.preventDefault();dz.style.borderColor='#cbd5e1';dz.style.background='#f8fafc';
+      var f=e.dataTransfer.files[0];if(f&&f.type.startsWith('image/'))imgHandleFile(f);});
+  }
+})();
+
+window.imgHandleFile=function(file){
+  if(!file)return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var dataUrl=e.target.result;
+    document.getElementById('imgPreview').src=dataUrl;
+    document.getElementById('imgPreviewWrap').style.display='';
+    document.getElementById('imgCodesWrap').style.display='none';
+    document.getElementById('imgResultsWrap').style.display='none';
+    document.getElementById('imgScanProgress').style.display='none';
+    document.getElementById('imgExtractStatus').style.display='';
+    fetch('/api/scan-image',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({image:dataUrl,mimeType:file.type||'image/png'})
+    }).then(function(r){return r.json();})
+    .then(function(res){
+      document.getElementById('imgExtractStatus').style.display='none';
+      if(!res.success){alert('エラー: '+res.error);return;}
+      window._imgCodes=res.codes;
+      var list=document.getElementById('imgCodesList');
+      if(res.codes.length){
+        list.innerHTML=res.codes.map(function(c){return '<span style="display:inline-block;background:#ede9fe;color:#5b21b6;padding:3px 10px;border-radius:6px;margin:3px;font-size:0.85rem;font-weight:700">'+c+'</span>';}).join('');
+        document.getElementById('imgRunBtn').style.display='';
+      }else{
+        list.innerHTML='<span style="color:#ef4444;font-size:0.85rem">証券コードが見つかりませんでした。別の画像を試してください。</span>';
+        document.getElementById('imgRunBtn').style.display='none';
+      }
+      document.getElementById('imgCodesWrap').style.display='';
+    }).catch(function(err){document.getElementById('imgExtractStatus').style.display='none';alert('通信エラー: '+err.message);});
+  };
+  reader.readAsDataURL(file);
+};
+
+window.imgRunScores=function(){
+  var codes=window._imgCodes||[];if(!codes.length)return;
+  var btn=document.getElementById('imgRunBtn');
+  btn.disabled=true;btn.style.opacity='0.6';
+  document.getElementById('imgResultsBody').innerHTML='';
+  document.getElementById('imgResultsWrap').style.display='';
+  document.getElementById('imgScanProgress').style.display='';
+  document.getElementById('imgProgressFill').style.width='0%';
+  var idx=0;
+  function next(){
+    if(idx>=codes.length){
+      document.getElementById('imgScanProgress').style.display='none';
+      btn.disabled=false;btn.style.opacity='1';
+      document.getElementById('imgResultsTitle').textContent=codes.length+'錠柄のスコア';
+      return;
+    }
+    var code=codes[idx];
+    document.getElementById('imgProgressMsg').textContent=code+' を取得中… ('+( idx+1)+'/'+codes.length+')';
+    document.getElementById('imgProgressFill').style.width=Math.round((idx/codes.length)*100)+'%';
+    fetch('/api/stock/'+code)
+      .then(function(r){return r.json();})
+      .then(function(res){imgAddRow(code,res);idx++;setTimeout(next,500);})
+      .catch(function(){imgAddRow(code,{success:false});idx++;setTimeout(next,500);});
+  }
+  next();
+};
+
+function imgAddRow(code,res){
+  var tbody=document.getElementById('imgResultsBody');
+  var tr=document.createElement('tr');tr.style.borderBottom='1px solid #f1f5f9';
+  if(!res.success){
+    tr.innerHTML='<td style="padding:8px 10px;font-weight:700">'+code+'</td><td style="padding:8px 10px;color:#94a3b8" colspan="4">取得失敗</td>';
+    tbody.appendChild(tr);return;
+  }
+  var form=apiToForm(res.data),result=calcScore(form);
+  var score=result.total,kos=result.kos.length,yield_=form.yield_||'',name=form.name||code;
+  var sc=score>=70?'#16a34a':score>=50?'#d97706':'#ef4444';
+  var kb=kos===0?'#dcfce7':'#fee2e2',kc=kos===0?'#16a34a':'#ef4444';
+  tr.innerHTML='<td style="padding:8px 10px;font-weight:700">'+code+'</td>'+
+    '<td style="padding:8px 10px">'+name+'</td>'+
+    '<td style="padding:8px 10px;text-align:center;font-weight:800;font-size:1rem;color:'+sc+'">'+score+'点</td>'+
+    '<td style="padding:8px 10px;text-align:center"><span style="background:'+kb+';color:'+kc+';padding:2px 8px;border-radius:999px;font-size:0.8rem;font-weight:700">'+kos+'個</span></td>'+
+    '<td style="padding:8px 10px;text-align:right">'+(yield_?yield_+'%':'—')+'</td>';
+  tbody.appendChild(tr);
+}
 </script>
 
 <!-- 🐸 作成者: kerokeropipi | 無断転用禁止 -->
