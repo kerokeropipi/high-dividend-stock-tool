@@ -850,18 +850,33 @@
     <div id="imgProgressMsg" style="font-size:0.82rem;color:#64748b;margin-top:6px"></div>
   </div>
   <div id="imgResultsWrap" style="display:none;margin-top:16px">
-    <div id="imgResultsTitle" style="font-size:0.85rem;font-weight:700;color:#0f172a;margin-bottom:8px"></div>
-    <div class="table-wrap"><table style="width:100%;border-collapse:collapse;font-size:0.84rem">
-      <thead><tr style="background:#f1f5f9">
-        <th style="padding:8px 10px;text-align:left;font-weight:700;color:#475569;white-space:nowrap">コード</th>
-        <th style="padding:8px 10px;text-align:left;font-weight:700;color:#475569">錠柄名</th>
-        <th style="padding:8px 10px;text-align:center;font-weight:700;color:#475569">スコア</th>
-        <th style="padding:8px 10px;text-align:center;font-weight:700;color:#475569">KO数</th>
-        <th style="padding:8px 10px;text-align:right;font-weight:700;color:#475569;white-space:nowrap">配当利回り</th>
-      </tr></thead>
-      <tbody id="imgResultsBody"></tbody>
-    </table></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px">
+    <div style="font-size:0.95rem;font-weight:800;color:#0f172a">スコア結果：<span id="imgResultCount">0</span> 銘柄</div>
+    <button onclick="addAllImgStocks()" style="font-size:0.8rem;padding:5px 12px;background:#6366f1;color:#fff;border:none;border-radius:6px;cursor:pointer">＋ 全件を比較リストに追加</button>
   </div>
+  <div style="overflow-x:auto">
+    <table class="bulk-result-table" style="width:100%;border-collapse:collapse;font-size:0.84rem">
+      <thead>
+        <tr>
+          <th style="padding:8px 6px;text-align:center;font-weight:700;color:#475569;background:#f1f5f9">順位</th>
+          <th style="padding:8px 6px;text-align:left;font-weight:700;color:#475569;background:#f1f5f9">銘柄</th>
+          <th style="padding:8px 6px;text-align:center;font-weight:700;color:#475569;background:#f1f5f9">スコア</th>
+          <th style="padding:8px 6px;text-align:center;font-weight:700;color:#475569;white-space:nowrap;background:#f1f5f9">利回り</th>
+          <th style="padding:8px 6px;text-align:center;font-weight:700;color:#475569;white-space:nowrap;background:#f1f5f9">① 売上高</th>
+          <th style="padding:8px 6px;text-align:center;font-weight:700;color:#475569;white-space:nowrap;background:#f1f5f9">② EPS</th>
+          <th style="padding:8px 6px;text-align:center;font-weight:700;color:#475569;white-space:nowrap;background:#f1f5f9">③ 営業利益率</th>
+          <th style="padding:8px 6px;text-align:center;font-weight:700;color:#475569;white-space:nowrap;background:#f1f5f9">④ 自己資本比率</th>
+          <th style="padding:8px 6px;text-align:center;font-weight:700;color:#475569;white-space:nowrap;background:#f1f5f9">⑤ 営業CF</th>
+          <th style="padding:8px 6px;text-align:center;font-weight:700;color:#475569;white-space:nowrap;background:#f1f5f9">⑥ 現金等</th>
+          <th style="padding:8px 6px;text-align:center;font-weight:700;color:#475569;white-space:nowrap;background:#f1f5f9">⑦ 1株配当</th>
+          <th style="padding:8px 6px;text-align:center;font-weight:700;color:#475569;white-space:nowrap;background:#f1f5f9">⑧ 配当性向</th>
+          <th style="padding:8px 6px;text-align:center;font-weight:700;color:#475569;background:#f1f5f9">操作</th>
+        </tr>
+      </thead>
+      <tbody id="imgResultsBody"></tbody>
+    </table>
+  </div>
+</div>
 </div>
 <div class="card mb-22">
     <div class="card-title">
@@ -1971,47 +1986,108 @@ window.imgRunScores=function(){
   var codes=window._imgCodes||[];if(!codes.length)return;
   var btn=document.getElementById('imgRunBtn');
   btn.disabled=true;btn.style.opacity='0.6';
-  document.getElementById('imgResultsBody').innerHTML='';
-  document.getElementById('imgResultsWrap').style.display='';
+  document.getElementById('imgResultsWrap').style.display='none';
   document.getElementById('imgScanProgress').style.display='';
   document.getElementById('imgProgressFill').style.width='0%';
+  window._imgResults=[];
   var idx=0;
   function next(){
     if(idx>=codes.length){
       document.getElementById('imgScanProgress').style.display='none';
       btn.disabled=false;btn.style.opacity='1';
-      document.getElementById('imgResultsTitle').textContent=codes.length+'錠柄のスコア';
-      return;
+      renderImgTable();return;
     }
     var code=codes[idx];
-    document.getElementById('imgProgressMsg').textContent=code+' を取得中… ('+( idx+1)+'/'+codes.length+')';
+    document.getElementById('imgProgressMsg').textContent=code+' を取得中… ('+(idx+1)+'/'+codes.length+')';
     document.getElementById('imgProgressFill').style.width=Math.round((idx/codes.length)*100)+'%';
     fetch('/api/stock/'+code)
       .then(function(r){return r.json();})
-      .then(function(res){imgAddRow(code,res);idx++;setTimeout(next,500);})
-      .catch(function(){imgAddRow(code,{success:false});idx++;setTimeout(next,500);});
+      .then(function(res){
+        if(res.success){
+          var form=apiToForm(res.data);
+          form.code=code;
+          var result=calcScore(form);
+          window._imgResults.push(Object.assign({},form,{result:result}));
+        }else{
+          window._imgResults.push({code:code,name:code,result:{total:0},_failed:true});
+        }
+        idx++;setTimeout(next,500);
+      })
+      .catch(function(){
+        window._imgResults.push({code:code,name:code,result:{total:0},_failed:true});
+        idx++;setTimeout(next,500);
+      });
   }
   next();
 };
-
-function imgAddRow(code,res){
-  var tbody=document.getElementById('imgResultsBody');
-  var tr=document.createElement('tr');tr.style.borderBottom='1px solid #f1f5f9';
-  if(!res.success){
-    tr.innerHTML='<td style="padding:8px 10px;font-weight:700">'+code+'</td><td style="padding:8px 10px;color:#94a3b8" colspan="4">取得失敗</td>';
-    tbody.appendChild(tr);return;
-  }
-  var form=apiToForm(res.data),result=calcScore(form);
-  var score=result.total,kos=result.kos.length,yield_=form.yield_||'',name=form.name||code;
-  var sc=score>=70?'#16a34a':score>=50?'#d97706':'#ef4444';
-  var kb=kos===0?'#dcfce7':'#fee2e2',kc=kos===0?'#16a34a':'#ef4444';
-  tr.innerHTML='<td style="padding:8px 10px;font-weight:700">'+code+'</td>'+
-    '<td style="padding:8px 10px">'+name+'</td>'+
-    '<td style="padding:8px 10px;text-align:center;font-weight:800;font-size:1rem;color:'+sc+'">'+score+'点</td>'+
-    '<td style="padding:8px 10px;text-align:center"><span style="background:'+kb+';color:'+kc+';padding:2px 8px;border-radius:999px;font-size:0.8rem;font-weight:700">'+kos+'個</span></td>'+
-    '<td style="padding:8px 10px;text-align:right">'+(yield_?yield_+'%':'—')+'</td>';
-  tbody.appendChild(tr);
+function renderImgTable(){
+  var list=(window._imgResults||[]).slice().sort(function(a,b){return b.result.total-a.result.total;});
+  window._imgSortedList=list;
+  document.getElementById('imgResultsWrap').style.display='block';
+  document.getElementById('imgResultCount').textContent=list.length;
+  var trendLbl={'10':'↗上昇','5':'→横ばい','0':'↘下落','15':'↗上昇','7':'→横ばい','':'\u2014'};
+  var cfLbl={'10':'✅黒字+増','6':'✅毎年黒字','0':'❌赤字あり','':'\u2014'};
+  var divLbl={'15':'✅増配継続','8':'✅安定','0':'❌減配あり','':'\u2014'};
+  function isAdded(code){return !!stocks.find(function(s){return s.code===code;});}
+  function cell(v,sfx){return '<td style="text-align:center;font-size:0.78rem">'+(v?esc(String(v))+sfx:'—')+'</td>';}
+  var rows=list.map(function(s,i){
+    if(s._failed){
+      return '<tr><td style="text-align:center;font-weight:700">'+(i+1)+'</td>'+
+        '<td><div style="font-weight:700">'+esc(s.code)+'</div></td>'+
+        '<td colspan="11" style="text-align:center;color:#94a3b8;font-size:0.78rem">取得失敗</td></tr>';
+    }
+    var sc=s.result.total;
+    var clr=sc>=80?'#15803d':'#1d4ed8';
+    var added=isAdded(s.code);
+    return '<tr>'+
+      '<td style="text-align:center;font-weight:700">'+(i+1)+'</td>'+
+      '<td style="cursor:pointer" data-code="'+esc(s.code)+'" data-name="'+esc(s.name)+'" onclick="loadFromBulk(this.dataset.code,this.dataset.name)">'+
+        '<div style="font-weight:700;color:#1d4ed8;text-decoration:underline dotted">'+esc(s.name)+'</div>'+
+        '<div style="font-size:0.73rem;color:#64748b">'+esc(s.code)+'</div>'+
+        '<div style="font-size:0.68rem;color:#0ea5e9;margin-top:2px">📊 クリックで詳細評価</div>'+
+      '</td>'+
+      '<td style="text-align:center">'+
+        '<span style="font-size:1.15rem;font-weight:900;color:'+clr+'">'+sc+'</span>'+
+        '<span style="font-size:0.68rem;color:#94a3b8">/100</span>'+
+      '</td>'+
+      cell(s.yield_,'%')+
+      '<td style="text-align:center;font-size:0.78rem">'+(trendLbl[s.sales]||'—')+'</td>'+
+      '<td style="text-align:center;font-size:0.78rem">'+(trendLbl[s.eps]||'—')+'</td>'+
+      cell(s.om,'%')+
+      cell(s.er,'%')+
+      '<td style="text-align:center;font-size:0.78rem">'+(cfLbl[s.cf]||'—')+'</td>'+
+      '<td style="text-align:center;font-size:0.78rem">'+(trendLbl[s.cash]||'—')+'</td>'+
+      '<td style="text-align:center;font-size:0.78rem">'+(divLbl[s.div]||'—')+'</td>'+
+      cell(s.pr,'%')+
+      '<td style="text-align:center">'+
+        '<button class="btn-add-stock'+(added?' added':'')+'" id="imgAddBtn_'+esc(s.code)+'"'+
+        ' onclick="addImgStock('+i+')"'+(added?' disabled':'')+'>'+
+        (added?'✅ 追加済':'＋ 追加')+
+        '</button>'+
+      '</td>'+
+    '</tr>';
+  }).join('');
+  document.getElementById('imgResultsBody').innerHTML=rows;
 }
+window.addImgStock=function(idx){
+  var s=(window._imgSortedList||[])[idx];
+  if(!s)return;
+  if(stocks.find(function(e){return e.code===s.code;})){
+    alert(s.name+' はすでに比較リストにあります');return;
+  }
+  stocks.push(s);renderList();
+  var btn=document.getElementById('imgAddBtn_'+s.code);
+  if(btn){btn.textContent='✅ 追加済';btn.disabled=true;btn.classList.add('added');}
+};
+window.addAllImgStocks=function(){
+  var list=window._imgSortedList||[];
+  var n=0;
+  list.forEach(function(s){
+    if(!s._failed&&!stocks.find(function(e){return e.code===s.code;})){stocks.push(s);n++;}
+  });
+  if(n){renderList();renderImgTable();alert(n+'銘柄を比較リストに追加しました');}
+  else{alert('追加できる銘柄がありません');}
+};
 </script>
 
 <!-- 🐸 作成者: kerokeropipi | 無断転用禁止 -->
